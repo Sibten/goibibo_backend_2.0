@@ -1,4 +1,4 @@
-import Joi from "joi";
+import Joi, { string } from "joi";
 import { Schema } from "mongoose";
 
 export const validateRoute = (data: Schema) => {
@@ -7,6 +7,7 @@ export const validateRoute = (data: Schema) => {
     source_city: Joi.string().required(),
     destination_city: Joi.string().required(),
     total_km: Joi.string().optional(),
+    stops: Joi.array().optional(),
   });
 
   return validate.validate(data);

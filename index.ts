@@ -7,6 +7,8 @@ import { roleRouter } from "./router/role.router";
 import { airlineRouter } from "./router/airline.router";
 import { routeRouter } from "./router/route.router";
 import fileupload from "express-fileupload";
+import { flightRouter } from "./router/flight.router";
+import { airbusRouter } from "./router/airbus.router";
 
 const app = express();
 env.config();
@@ -22,4 +24,7 @@ app.use("/city", cityRouter);
 app.use("/airlines", airlineRouter);
 app.use("/role", roleRouter);
 app.use("/route", routeRouter);
+app.use("/airbus", airbusRouter);
+app.use("/flight", flightRouter);
+
 app.listen(port, () => console.log(`server is listening at ${port}`));

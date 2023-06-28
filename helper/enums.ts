@@ -27,3 +27,11 @@ export enum gender {
   Female,
   Other,
 }
+
+
+export enum Flightclass {
+  Economy,
+  PremiumEconomy,
+  Business,
+  FirstClass,
+}

@@ -7,7 +7,9 @@ const c = mongoose
 
 const classSchema = new mongoose.Schema({
   flight_id: { type: mongoose.Types.ObjectId, ref: "flight" },
-  class_type: String,
+  class_type: Number,
   fare: Number,
   tax: Number,
 });
+
+export const classModel = mongoose.model("class", classSchema);

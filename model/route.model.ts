@@ -13,6 +13,7 @@ const routeSchema = new mongoose.Schema({
     ref: "city",
     required: true,
   },
+  stops: [{ type :mongoose.Types.ObjectId, ref : "city" }],
   distance: Number,
 });
 
