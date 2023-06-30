@@ -9,6 +9,7 @@ import { routeRouter } from "./router/route.router";
 import fileupload from "express-fileupload";
 import { flightRouter } from "./router/flight.router";
 import { airbusRouter } from "./router/airbus.router";
+import { searchRouter } from "./router/search.router";
 
 const app = express();
 env.config();
@@ -20,11 +21,10 @@ app.use(express.json());
 
 app.use("/user", userRouter);
 app.use("/city", cityRouter);
-
 app.use("/airlines", airlineRouter);
 app.use("/role", roleRouter);
 app.use("/route", routeRouter);
 app.use("/airbus", airbusRouter);
 app.use("/flight", flightRouter);
-
+app.use("/search", searchRouter);
 app.listen(port, () => console.log(`server is listening at ${port}`));

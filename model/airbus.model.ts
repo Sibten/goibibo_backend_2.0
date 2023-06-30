@@ -5,19 +5,22 @@ const c = mongoose
   .then((d) => d)
   .catch((e) => e);
 
-const airbusSchema = new mongoose.Schema({
-  airbus_code: String,
-  available_class: { BC: Boolean, EC: Boolean, PE: Boolean, FC: Boolean },
-  seat_map: [
-    {
-      class_type: Number,
-      row_start: Number,
-      row_end: Number,
-      col_start: String,
-      col_gap: String,
-      col_end: String,
-    },
-  ],
-});
+const airbusSchema = new mongoose.Schema(
+  {
+    airbus_code: String,
+    available_class: { BC: Boolean, EC: Boolean, PE: Boolean, FC: Boolean },
+    seat_map: [
+      {
+        class_type: Number,
+        row_start: Number,
+        row_end: Number,
+        col_start: String,
+        col_gap: String,
+        col_end: String,
+      },
+    ],
+  },
+  { timestamps: true }
+);
 
 export const airbusModel = mongoose.model("airbus", airbusSchema);

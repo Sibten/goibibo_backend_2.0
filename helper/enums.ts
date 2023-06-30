@@ -35,3 +35,4 @@ export enum Flightclass {
   Business,
   FirstClass,
 }
+

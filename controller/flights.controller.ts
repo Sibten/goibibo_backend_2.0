@@ -8,10 +8,16 @@ import { Flightclass, flightStatus } from "../helper/enums";
 import { flightModel } from "../model/flight.model";
 import { airbusModel } from "../model/airbus.model";
 import { airlineModel } from "../model/airline.model";
+import { fareModel } from "../model/fare.model";
 
 export const scheduleFlight = async (req: Request, res: Response) => {
-  let token: any = req.headers.token;
-  let decode: JwtPayload = <JwtPayload>jwt.decode(token);
+  let sourceTime = req.body.source_time;
+  let destinationTime = req.body.destination_time;
+
+  sourceTime = new Date(sourceTime);
+  destinationTime = new Date(destinationTime);
+  const token: any = req.headers.token;
+  const decode: JwtPayload = <JwtPayload>jwt.decode(token);
 
   const findUser = await userModel.findOne({ email: decode.email }).exec();
 
@@ -54,16 +60,26 @@ export const scheduleFlight = async (req: Request, res: Response) => {
     }
   });
 
-  if (findRoute && findAirline && findUser && findAirbus) {
+  const findFare = await fareModel
+    .findOne({ airline_id: findAirline?._id })
+    .exec();
+  if (
+    sourceTime < destinationTime &&
+    findRoute &&
+    findAirline &&
+    findUser &&
+    findAirbus
+  ) {
     const FlightData: FlightBase = {
       flight_no: `${findAirlineDetails?.airline_code}-${findRoute.route_id}-${findAirbus.airbus_code}`,
       airline_id: findAirlineDetails?._id ?? null,
       route_id: findRoute._id ?? null,
       airbus_id: findAirbus?._id ?? null,
+      fare: findFare?._id ?? null,
       status: flightStatus.Schduleded,
       timing: {
-        source_time: req.body.source_time,
-        destination_time: req.body.destination_time,
+        source_time: new Date(req.body.source_time),
+        destination_time: new Date(req.body.destination_time),
       },
       available_seats: seat_avliable,
       booked_seats: { BC: [], EC: [], PE: [], FC: [] },
@@ -75,34 +91,44 @@ export const scheduleFlight = async (req: Request, res: Response) => {
     } catch (e) {
       res.status(400).json({ add: 0, message: "error", error: e });
     }
-  } else {
-    res
-      .status(400)
-      .json({ schedule: 0, message: "Route or Airline not found!" });
-  }
-
-  res.status(200).send();
+  } else
+    res.status(400).json({
+      add: 0,
+      message:
+        "Bad Request! Check Source time or Destination time, Route, Airbus, fare etc.",
+    });
 };
 
 export const getFlightDetails = async (req: Request, res: Response) => {
-  let token: any = req.headers.token;
-  let decode: JwtPayload = <JwtPayload>jwt.decode(token);
-
-  const findUser = await userModel.findOne({ email: decode.email }).exec();
-
-  const findAirline = await airlineAdminModel
-    .findOne({ user_id: findUser?._id })
-    .exec();
-
   const data = await flightModel
     .findOne({
       flight_no: req.query.flightno,
-      airline_id: findAirline?.airline_id,
     })
     .populate({ path: "airline_id" })
-    .populate({ path: "route_id" })
+    .populate({
+      path: "route_id",
+      populate: { path: "source_city destination_city" },
+    })
     .populate({ path: "airbus_id" })
     .exec();
 
   res.status(200).send(data);
 };
+
+export const getMyAirlineFlights = async (req: Request, res: Response) => {
+  let token: any = req.headers.token;
+  let decode: JwtPayload = <JwtPayload>jwt.decode(token);
+  let findUser = await userModel.findOne({ email: decode.email }).exec();
+
+  const findAirlineId = await airlineAdminModel
+    .findOne({
+      user_id: findUser?._id,
+    })
+    .exec();
+  const data = await flightModel
+    .find({ airline_id: findAirlineId?.airline_id })
+    .exec();
+  res.status(200).send(data);
+};
+
+

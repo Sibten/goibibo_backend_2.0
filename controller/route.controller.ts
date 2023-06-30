@@ -6,6 +6,7 @@ import mongoose from "mongoose";
 import { cityModel } from "../model/city.model";
 import process = require("process");
 import GeoPoint from "geopoint";
+import { RouteBase } from "../helper/interfaces";
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
@@ -20,7 +21,10 @@ const findGeoCode = async (city: string) => {
   });
 };
 
-const finddistance = async (Source: string, Destination: string) => {
+const finddistance = async (
+  Source: string,
+  Destination: string
+): Promise<number> => {
   let sourceGeo: any = await findGeoCode(Source);
   let destinationGeo: any = await findGeoCode(Destination);
 
@@ -37,9 +41,9 @@ const finddistance = async (Source: string, Destination: string) => {
   });
 };
 
-const findCity = async (id: mongoose.Types.ObjectId) => {
-  const city = await cityModel.findById(id).exec();
-  return city?.airport_name;
+const findCity = async (code: string) => {
+  const city = await cityModel.findOne({ airport_code: code }).exec();
+  return city;
 };
 
 export const addRoute = async (req: Request, res: Response) => {
@@ -47,10 +51,26 @@ export const addRoute = async (req: Request, res: Response) => {
   if (!valid["error"]) {
     let sourceCity = await findCity(req.body.source_city);
     let destinationCity = await findCity(req.body.destination_city);
-    const distance = await finddistance(sourceCity!, destinationCity!);
-    req.body.distance = distance;
+    const stops: Array<mongoose.Types.ObjectId | null> = [];
+    req.body.stops.forEach(async (s: string) => {
+      if(s){
+        let stopCity = await findCity(s);
+        stops.push(stopCity?._id!);
+      }
+    });
+    const distance: number = await finddistance(
+      sourceCity?.airport_name!,
+      destinationCity?.airport_name!
+    );
+    const routeData: RouteBase = {
+      route_id: `${sourceCity?.airport_code}-${destinationCity?.airport_code}-${req.body.stops.length}`,
+      source_city: sourceCity?._id ?? null,
+      destination_city: destinationCity?._id ?? null,
+      distance: distance,
+      stops: stops,
+    };
 
-    const newRoute = new routeModel(req.body);
+    const newRoute = new routeModel(routeData);
     await newRoute.save();
 
     res.status(200).json({ add: 1, message: "Route Added!" });
@@ -64,6 +84,7 @@ export const getRouteDetails = async (req: Request, res: Response) => {
     .find({})
     .populate("source_city")
     .populate("destination_city")
+    .populate("stops")
     .exec();
   res.status(200).send(data);
 };

@@ -34,8 +34,26 @@ export interface FlightBase {
   airline_id: mongoose.Types.ObjectId | null;
   route_id: mongoose.Types.ObjectId | null;
   airbus_id: mongoose.Types.ObjectId | null;
+  fare: mongoose.Types.ObjectId | null;
   status: number;
-  timing: { source_time: string; destination_time: string };
+  timing: { source_time: Date; destination_time: Date };
   available_seats: { BC: number; EC: number; PE: number; FC: number };
   booked_seats: { BC: []; EC: []; PE: []; FC: [] };
+}
+
+export interface RouteBase {
+  route_id: string;
+  source_city: mongoose.Types.ObjectId | null;
+  destination_city: mongoose.Types.ObjectId | null;
+  stops: Array<mongoose.Types.ObjectId | null>;
+  distance: number;
+}
+interface ClassFare {
+  class_type: number;
+  basic_fare: number;
+}
+export interface FareBase {
+  airline_id: mongoose.Types.ObjectId | null;
+  fare: Array<ClassFare>;
+  tax: number;
 }

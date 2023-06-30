@@ -1,5 +1,5 @@
 import e from "express";
-import { createAirbus } from "../controller/airbus.controller";
+import { createAirbus } from "../controller/airbus.airlines.controller";
 import { authenticateUser } from "../middleware/authenticate";
 import { roles } from "../helper/enums";
 

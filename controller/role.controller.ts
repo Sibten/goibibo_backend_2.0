@@ -30,3 +30,5 @@ export const deleteRole = async (req: Request, res: Response) => {
     res.status(200).json({ sucess: 0, message: "Role not found!" });
   }
 };
+
+
