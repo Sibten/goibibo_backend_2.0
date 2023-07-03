@@ -57,3 +57,12 @@ export interface FareBase {
   fare: Array<ClassFare>;
   tax: number;
 }
+interface Luggage {
+  type: number;
+  limit: number;
+}
+
+export interface RuleBase {
+  airline_id: mongoose.Types.ObjectId | null;
+  luggage: Array<Luggage>;
+}

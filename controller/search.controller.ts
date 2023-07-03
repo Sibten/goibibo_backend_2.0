@@ -44,6 +44,7 @@ export const getFlightsOnRoute = async (req: Request, res: Response) => {
           populate: "source_city destination_city",
         })
         .populate({ path: "airline_id" })
+        .populate({ path: "fare" })
         .exec();
       break;
     case Flightclass.Economy:
@@ -58,6 +59,7 @@ export const getFlightsOnRoute = async (req: Request, res: Response) => {
           populate: "source_city destination_city",
         })
         .populate({ path: "airline_id" })
+        .populate({ path: "fare" })
         .exec();
       break;
 
@@ -73,6 +75,7 @@ export const getFlightsOnRoute = async (req: Request, res: Response) => {
           populate: "source_city destination_city",
         })
         .populate({ path: "airline_id" })
+        .populate({ path: "fare" })
         .exec();
       break;
     case Flightclass.PremiumEconomy:
@@ -87,6 +90,7 @@ export const getFlightsOnRoute = async (req: Request, res: Response) => {
           populate: "source_city destination_city",
         })
         .populate({ path: "airline_id" })
+        .populate({ path: "fare" })
         .exec();
       break;
     default:

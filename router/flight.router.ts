@@ -18,4 +18,3 @@ flightRouter.use((req, res, next) =>
 flightRouter.post("/schedule", scheduleFlight);
 flightRouter.get("/my_airline_flights", getMyAirlineFlights);
 
-flightRouter.post("/fare/add", addFare);
