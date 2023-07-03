@@ -8,7 +8,7 @@ const c = mongoose
 const ruleSchema = new mongoose.Schema(
   {
     airline_id: { type: mongoose.Types.ObjectId, ref: "airline" },
-    luggage: [{ type: Number, limit: Number }],
+    luggage: [],
   },
   { timestamps: true }
 );

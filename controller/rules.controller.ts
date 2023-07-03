@@ -21,16 +21,16 @@ export const addRule = async (req: Request, res: Response) => {
     airline_id: findAirlineId?._id ?? null,
     luggage: [
       {
-        type: Flightclass.Business,
-        limit: req.body.BC,
-      },
-      {
         type: Flightclass.Economy,
         limit: req.body.EC,
       },
       {
         type: Flightclass.PremiumEconomy,
         limit: req.body.PE,
+      },
+      {
+        type: Flightclass.Business,
+        limit: req.body.BC,
       },
       {
         type: Flightclass.FirstClass,
@@ -46,4 +46,23 @@ export const addRule = async (req: Request, res: Response) => {
   } catch (e) {
     res.status(400).json({ add: 0, message: "error", error: e });
   }
+};
+
+export const getRules = async (req: Request, res: Response) => {
+  let token: any = req.headers.token;
+
+  let decode: JwtPayload = <JwtPayload>jwt.decode(token);
+  let findUser = await userModel.findOne({ email: decode.email }).exec();
+
+  const findAirlineId = await airlineAdminModel
+    .findOne({
+      user_id: findUser?._id,
+    })
+    .exec();
+
+  const data = await ruleModel
+    .findOne({ airline_id: findAirlineId?._id })
+    .populate("airline_id")
+    .exec();
+  res.status(200).send(data);
 };

@@ -11,6 +11,7 @@ import { addRule } from "../controller/rules.controller";
 import { addFare } from "../controller/fare.controller";
 export const airlineRouter = e.Router();
 
+
 airlineRouter.post("/myairline/add_rule", addRule);
 airlineRouter.post("/myairline/fare/add", addFare);
 airlineRouter.use((req, res, next) =>
