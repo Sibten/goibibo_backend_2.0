@@ -4,11 +4,12 @@ import { userModel } from "../model/user.model";
 import { airlineAdminModel } from "../model/airline_admin.model";
 import { ClassMap, FlightBase, SeatAvalibility } from "../helper/interfaces";
 import { routeModel } from "../model/route.model";
-import { Flightclass, flightStatus } from "../helper/enums";
+import { Flightclass, FlightStatus } from "../helper/enums";
 import { flightModel } from "../model/flight.model";
 import { airbusModel } from "../model/airbus.model";
 import { airlineModel } from "../model/airline.model";
 import { fareModel } from "../model/fare.model";
+import { ruleModel } from "../model/rules.model";
 
 export const scheduleFlight = async (req: Request, res: Response) => {
   let sourceTime = req.body.source_time;
@@ -63,6 +64,11 @@ export const scheduleFlight = async (req: Request, res: Response) => {
   const findFare = await fareModel
     .findOne({ airline_id: findAirline?._id })
     .exec();
+
+  const findRule = await ruleModel
+    .findOne({ airline_id: findAirline?._id })
+    .exec();
+
   if (
     sourceTime < destinationTime &&
     findRoute &&
@@ -76,12 +82,13 @@ export const scheduleFlight = async (req: Request, res: Response) => {
       route_id: findRoute._id ?? null,
       airbus_id: findAirbus?._id ?? null,
       fare: findFare?._id ?? null,
-      status: flightStatus.Schduleded,
+      status: FlightStatus.Schduleded,
       timing: {
         source_time: new Date(req.body.source_time),
         destination_time: new Date(req.body.destination_time),
       },
       available_seats: seat_avliable,
+      rule: findRule?._id ?? null,
       booked_seats: { BC: [], EC: [], PE: [], FC: [] },
     };
     try {

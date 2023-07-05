@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { mongo } from "mongoose";
 
 const c = mongoose
   .connect("mongodb://localhost:27017/goibibo")
@@ -16,6 +16,7 @@ const flightSchema = new mongoose.Schema(
     timing: { source_time: Date, destination_time: Date },
     available_seats: { BC: Number, EC: Number, PE: Number, FC: Number },
     booked_seats: { BC: [String], EC: [String], PE: [String], FC: [String] },
+    rule: { type: mongoose.Types.ObjectId, ref: "rule" },
   },
   { timestamps: true }
 );

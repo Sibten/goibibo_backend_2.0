@@ -39,6 +39,7 @@ export interface FlightBase {
   timing: { source_time: Date; destination_time: Date };
   available_seats: { BC: number; EC: number; PE: number; FC: number };
   booked_seats: { BC: []; EC: []; PE: []; FC: [] };
+  rule : mongoose.Types.ObjectId | null;
 }
 
 export interface RouteBase {

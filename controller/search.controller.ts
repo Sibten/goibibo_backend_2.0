@@ -3,7 +3,7 @@ import { routeModel } from "../model/route.model";
 import { cityModel } from "../model/city.model";
 import { ObjectId } from "mongodb";
 import { flightModel } from "../model/flight.model";
-import { Flightclass } from "../helper/enums";
+import { FlightStatus, Flightclass } from "../helper/enums";
 
 export const getFlightsOnRoute = async (req: Request, res: Response) => {
   const startPoint = await cityModel
@@ -38,13 +38,28 @@ export const getFlightsOnRoute = async (req: Request, res: Response) => {
           route_id: Routes,
           "timing.source_time": { $gte: date, $lt: date2 },
           "available_seats.BC": { $gte: req.query.people },
+          status: FlightStatus.Schduleded,
         })
         .populate({
           path: "route_id",
-          populate: "source_city destination_city",
+          select: "-_id -__v",
+          populate: {
+            path: "source_city destination_city stops",
+            select: "airport_name airport_code city_id city_name -_id",
+          },
         })
-        .populate({ path: "airline_id" })
-        .populate({ path: "fare" })
+        .populate({
+          path: "airline_id",
+          select: "airline_id airline_name airline_icon airline_code -_id",
+        })
+        .populate({
+          path: "fare",
+          select: "-fare._id -_id -__v -createdAt -updatedAt",
+        })
+        .populate({ path: "airbus_id", select: "airbus_code" })
+        .populate({ path: "rule", select: " -_id -__v -createdAt -updatedAt" })
+        .select("-_id -__v -createdAt -updatedAt")
+        .sort({ "timing.source_time": 1 })
         .exec();
       break;
     case Flightclass.Economy:
@@ -56,10 +71,25 @@ export const getFlightsOnRoute = async (req: Request, res: Response) => {
         })
         .populate({
           path: "route_id",
-          populate: "source_city destination_city",
+          select: "-_id -__v",
+          populate: {
+            path: "source_city destination_city stops",
+            select: "airport_name airport_code city_id city_name -_id",
+          },
         })
-        .populate({ path: "airline_id" })
-        .populate({ path: "fare" })
+        .populate({
+          path: "airline_id",
+          select: "airline_id airline_name airline_icon airline_code -_id",
+        })
+        .populate({
+          path: "fare",
+          select: "-fare._id -_id -__v -createdAt -updatedAt",
+        })
+        .populate({ path: "rule", select: " -_id -__v -createdAt -updatedAt" })
+        .populate({ path: "airbus_id", select: "airbus_code -_id" })
+   
+        .select("-_id -__v -createdAt -updatedAt")
+        .sort({ "timing.source_time": 1 })
         .exec();
       break;
 
@@ -72,10 +102,23 @@ export const getFlightsOnRoute = async (req: Request, res: Response) => {
         })
         .populate({
           path: "route_id",
-          populate: "source_city destination_city",
+          select: "-_id -__v",
+          populate: {
+            path: "source_city destination_city stops",
+            select: "airport_name airport_code city_id city_name -_id",
+          },
         })
-        .populate({ path: "airline_id" })
-        .populate({ path: "fare" })
+        .populate({
+          path: "airline_id",
+          select: "airline_id airline_name airline_icon airline_code -_id",
+        })
+        .populate({
+          path: "fare",
+          select: "-fare._id -_id -__v -createdAt -updatedAt",
+        })
+        .populate({ path: "rule", select: " -_id -__v -createdAt -updatedAt" })
+        .select("-_id -__v -createdAt -updatedAt")
+        .sort({ "timing.source_time": 1 })
         .exec();
       break;
     case Flightclass.PremiumEconomy:
@@ -87,10 +130,23 @@ export const getFlightsOnRoute = async (req: Request, res: Response) => {
         })
         .populate({
           path: "route_id",
-          populate: "source_city destination_city",
+          select: "-_id -__v",
+          populate: {
+            path: "source_city destination_city stops",
+            select: "airport_name airport_code city_id city_name -_id",
+          },
         })
-        .populate({ path: "airline_id" })
-        .populate({ path: "fare" })
+        .populate({
+          path: "airline_id",
+          select: "airline_id airline_name airline_icon airline_code -_id",
+        })
+        .populate({
+          path: "fare",
+          select: "-fare._id -_id -__v -createdAt -updatedAt",
+        })
+        .populate({ path: "rule", select: " -_id -__v -createdAt -updatedAt" })
+        .select("-_id -__v -createdAt -updatedAt")
+        .sort({ "timing.source_time": 1 })
         .exec();
       break;
     default:
@@ -104,6 +160,8 @@ export const getFlightsOnRoute = async (req: Request, res: Response) => {
           populate: "source_city destination_city",
         })
         .populate({ path: "airline_id" })
+        .populate({ path: "rule" })
+        .sort({ "timing.source_time": 1 })
         .exec();
       break;
   }

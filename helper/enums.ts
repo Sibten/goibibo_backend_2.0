@@ -10,7 +10,7 @@ export enum payment {
   Refunded,
 }
 
-export enum flightStatus {
+export enum FlightStatus {
   Schduleded,
   Running,
   Completed,
