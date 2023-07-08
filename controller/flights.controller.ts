@@ -76,8 +76,14 @@ export const scheduleFlight = async (req: Request, res: Response) => {
     findUser &&
     findAirbus
   ) {
+    const findFlight = await flightModel
+      .find({
+        flight_no: `${findAirlineDetails?.airline_code}-${findRoute.route_id}-${findAirbus.airbus_code}`,
+      })
+      .exec();
+
     const FlightData: FlightBase = {
-      flight_no: `${findAirlineDetails?.airline_code}-${findRoute.route_id}-${findAirbus.airbus_code}`,
+      flight_no: `${findAirlineDetails?.airline_code}-${findRoute.route_id}-${findAirbus.airbus_code}-${findFlight.length}`,
       airline_id: findAirlineDetails?._id ?? null,
       route_id: findRoute._id ?? null,
       airbus_id: findAirbus?._id ?? null,

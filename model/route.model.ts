@@ -1,10 +1,8 @@
 import mongoose from "mongoose";
 
-const c = mongoose
-  .connect("mongodb://localhost:27017/goibibo")
-  .then((d) => d)
-  .catch((e) => e);
+import { connectDB } from "./Service/ConnectDB.services";
 
+connectDB();
 const routeSchema = new mongoose.Schema(
   {
     route_id: String,

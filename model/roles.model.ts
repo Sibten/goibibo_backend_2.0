@@ -1,10 +1,9 @@
 import { number } from "joi";
 import mongoose from "mongoose";
 
-const c = mongoose
-  .connect("mongodb://localhost:27017/goibibo")
-  .then((d) => d)
-  .catch((e) => e);
+import { connectDB } from "./Service/ConnectDB.services";
+
+connectDB();
 
 const roleSchema = new mongoose.Schema(
   {

@@ -1,9 +1,7 @@
-import mongoose, { mongo } from "mongoose";
+import mongoose from "mongoose";
+import { connectDB } from "./Service/ConnectDB.services";
 
-const c = mongoose
-  .connect("mongodb://localhost:27017/goibibo")
-  .then((d) => d)
-  .catch((e) => e);
+connectDB();
 
 const flightSchema = new mongoose.Schema(
   {
