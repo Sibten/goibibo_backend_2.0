@@ -11,9 +11,13 @@ const flightSchema = new mongoose.Schema(
     airbus_id: { type: mongoose.Types.ObjectId, ref: "airbus" },
     fare: { type: mongoose.Types.ObjectId, ref: "fare" },
     status: Number,
-    timing: { source_time: Date, destination_time: Date },
-    available_seats: { BC: Number, EC: Number, PE: Number, FC: Number },
-    booked_seats: { BC: [String], EC: [String], PE: [String], FC: [String] },
+    timing: [{ source_time: Date, destination_time: Date }],
+    available_seats: [
+      { date: Date, BC: Number, EC: Number, PE: Number, FC: Number },
+    ],
+    booked_seats: [
+      { date: Date, BC: [String], EC: [String], PE: [String], FC: [String] },
+    ],
     rule: { type: mongoose.Types.ObjectId, ref: "rule" },
   },
   { timestamps: true }

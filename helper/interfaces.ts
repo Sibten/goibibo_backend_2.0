@@ -8,6 +8,7 @@ export interface FileParams {
 }
 
 export interface SeatAvalibility {
+  date: Date;
   BC: number;
   EC: number;
   PE: number;
@@ -29,6 +30,19 @@ export interface AirBusBase {
   seat_map: [ClassMap];
 }
 
+export interface Timing {
+  source_time: Date;
+  destination_time: Date;
+}
+
+export interface BookedSeats {
+  date: Date;
+  BC: Array<string>;
+  EC: Array<string>;
+  PE: Array<string>;
+  FC: Array<string>;
+}
+
 export interface FlightBase {
   flight_no: string;
   airline_id: mongoose.Types.ObjectId | null;
@@ -36,10 +50,10 @@ export interface FlightBase {
   airbus_id: mongoose.Types.ObjectId | null;
   fare: mongoose.Types.ObjectId | null;
   status: number;
-  timing: { source_time: Date; destination_time: Date };
-  available_seats: { BC: number; EC: number; PE: number; FC: number };
-  booked_seats: { BC: []; EC: []; PE: []; FC: [] };
-  rule : mongoose.Types.ObjectId | null;
+  timing?: Array<Timing>;
+  available_seats?: Array<SeatAvalibility>;
+  booked_seats?: Array<BookedSeats>;
+  rule: mongoose.Types.ObjectId | null;
 }
 
 export interface RouteBase {

@@ -2,7 +2,13 @@ import jwt, { JwtPayload } from "jsonwebtoken";
 import { Request, Response } from "express";
 import { userModel } from "../model/user.model";
 import { airlineAdminModel } from "../model/airline_admin.model";
-import { ClassMap, FlightBase, SeatAvalibility } from "../helper/interfaces";
+import {
+  ClassMap,
+  FlightBase,
+  SeatAvalibility,
+  BookedSeats,
+  Timing,
+} from "../helper/interfaces";
 import { routeModel } from "../model/route.model";
 import { Flightclass, FlightStatus } from "../helper/enums";
 import { flightModel } from "../model/flight.model";
@@ -39,7 +45,15 @@ export const scheduleFlight = async (req: Request, res: Response) => {
     })
     .exec();
 
-  const seat_avliable: SeatAvalibility = { BC: 0, EC: 0, PE: 0, FC: 0 };
+  const ScheduleDate: Date = new Date(req.body.source_time);
+
+  const seat_avliable: SeatAvalibility = {
+    date: ScheduleDate,
+    BC: 0,
+    EC: 0,
+    PE: 0,
+    FC: 0,
+  };
 
   findAirbus?.seat_map!.forEach((s: ClassMap) => {
     let seats =
@@ -60,6 +74,19 @@ export const scheduleFlight = async (req: Request, res: Response) => {
         break;
     }
   });
+
+  const bookedSeat: BookedSeats = {
+    date: ScheduleDate,
+    EC: [],
+    BC: [],
+    PE: [],
+    FC: [],
+  };
+
+  const timing: Timing = {
+    source_time: ScheduleDate,
+    destination_time: new Date(req.body.destination_time),
+  };
 
   const findFare = await fareModel
     .findOne({ airline_id: findAirline?._id })
@@ -83,23 +110,40 @@ export const scheduleFlight = async (req: Request, res: Response) => {
       .exec();
 
     const FlightData: FlightBase = {
-      flight_no: `${findAirlineDetails?.airline_code}-${findRoute.route_id}-${findAirbus.airbus_code}-${findFlight.length}`,
+      flight_no: `${findAirlineDetails?.airline_code}-${findRoute.route_id}-${findAirbus.airbus_code}`,
       airline_id: findAirlineDetails?._id ?? null,
       route_id: findRoute._id ?? null,
       airbus_id: findAirbus?._id ?? null,
       fare: findFare?._id ?? null,
       status: FlightStatus.Schduleded,
-      timing: {
-        source_time: new Date(req.body.source_time),
-        destination_time: new Date(req.body.destination_time),
-      },
-      available_seats: seat_avliable,
       rule: findRule?._id ?? null,
-      booked_seats: { BC: [], EC: [], PE: [], FC: [] },
     };
     try {
-      const newFlight = new flightModel(FlightData);
-      await newFlight.save();
+      await flightModel
+        .updateOne(
+          { flight_no: FlightData.flight_no },
+          {
+            $push: {
+              timing: timing,
+              available_seats: seat_avliable,
+              booked_seats: bookedSeat,
+            },
+            $set: {
+              flight_no: FlightData.flight_no,
+              airline_id: FlightData.airline_id,
+              route_id: FlightData.route_id,
+              airbus_id: FlightData.airbus_id,
+              fare: FlightData.fare,
+              status: FlightData.status,
+              rule: FlightData.rule,
+            },
+          },
+          {
+            upsert: true,
+            timestamps: true,
+          }
+        )
+        .exec();
       res.status(400).json({ add: 1, message: "Flight Schedulded!" });
     } catch (e) {
       res.status(400).json({ add: 0, message: "error", error: e });
