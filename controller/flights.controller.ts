@@ -161,16 +161,34 @@ export const getFlightDetails = async (req: Request, res: Response) => {
     .findOne({
       flight_no: req.query.flightno,
     })
-    .populate({ path: "airline_id" })
     .populate({
       path: "route_id",
-      populate: { path: "source_city destination_city" },
+      select: "-_id -__v",
+      populate: {
+        path: "source_city destination_city stops",
+        select: "airport_name airport_code city_id city_name -_id",
+      },
     })
-    .populate({ path: "airbus_id" })
+    .populate({
+      path: "airline_id",
+      select: "airline_id airline_name airline_icon airline_code -_id",
+    })
+    .populate({
+      path: "fare",
+      select: "-fare._id -_id -__v -createdAt -updatedAt",
+    })
+    .populate({ path: "airbus_id", select: "airbus_code" })
+    .populate({
+      path: "rule",
+      select: " -_id -__v -createdAt -updatedAt",
+    })
+    .select("-_id -__v -createdAt -updatedAt")
     .exec();
 
   res.status(200).send(data);
 };
+
+
 
 export const getMyAirlineFlights = async (req: Request, res: Response) => {
   let token: any = req.headers.token;
