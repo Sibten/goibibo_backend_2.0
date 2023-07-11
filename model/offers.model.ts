@@ -7,3 +7,5 @@ const offerSchema = new mongoose.Schema({
   offer_name: String,
   offer_discount: Number,
 });
+
+const offerModel = mongoose.model("offer", offerSchema);
