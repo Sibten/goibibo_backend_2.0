@@ -16,12 +16,13 @@ import { FileParams } from "../helper/interfaces";
 
 export const addUser = async (req: Request, res: Response): Promise<void> => {
   const validate = validateUser(req.body);
+  const findRole = await roleModel.findOne({ role_name: "User" }).exec();
   if (!validate["error"]) {
     let payload: any = {
       profile_photo:
         "https://res.cloudinary.com/dgsqarold/image/upload/v1685697769/Goibibo/3237472_tgty4m.png",
       email: req.body.email,
-      role: roles.User,
+      role: findRole?._id ?? "",
       user_name: "TRAVELLER",
     };
     try {

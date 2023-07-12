@@ -81,3 +81,13 @@ export interface RuleBase {
   airline_id: mongoose.Types.ObjectId | null;
   luggage: Array<Luggage>;
 }
+
+
+export interface Offer {
+  offer_name: string;
+  referal_code: string;
+  offer_discount: number;
+  valid_till: Date;
+  promo: boolean;
+  description: string;
+}
