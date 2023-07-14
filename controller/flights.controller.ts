@@ -177,7 +177,7 @@ export const getFlightDetails = async (req: Request, res: Response) => {
       path: "fare",
       select: "-fare._id -_id -__v -createdAt -updatedAt",
     })
-    .populate({ path: "airbus_id", select: "airbus_code" })
+    .populate({ path: "airbus_id", select: "-_id -__v -createdAt -updatedAt" })
     .populate({
       path: "rule",
       select: " -_id -__v -createdAt -updatedAt",
