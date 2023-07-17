@@ -91,3 +91,11 @@ export interface Offer {
   promo: boolean;
   description: string;
 }
+
+export interface AddOn {
+  type: number;
+  name: string;
+  icon?: string;
+  limit?: number;
+  price: number;
+}

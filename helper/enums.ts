@@ -36,3 +36,7 @@ export enum Flightclass {
   FirstClass,
 }
 
+export enum AddOnType {
+  Baggage,
+  Insurance,
+}

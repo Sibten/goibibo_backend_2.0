@@ -11,6 +11,7 @@ import { flightRouter } from "./router/flight.router";
 import { airbusRouter } from "./router/airbus.router";
 import { searchRouter } from "./router/search.router";
 import { offerRouter } from "./router/offer.router";
+import { addOnRouter } from "./router/addon.router";
 
 const app = express();
 env.config();
@@ -29,4 +30,5 @@ app.use("/airbus", airbusRouter);
 app.use("/flight", flightRouter);
 app.use("/search", searchRouter);
 app.use("/offers", offerRouter);
+app.use("/addons", addOnRouter);
 app.listen(port, () => console.log(`server is listening at ${port}`));
