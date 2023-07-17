@@ -166,7 +166,7 @@ export const getFlightDetails = async (req: Request, res: Response) => {
       select: "-_id -__v",
       populate: {
         path: "source_city destination_city stops",
-        select: "airport_name airport_code city_id city_name -_id",
+        select: "airport_name airport_code city_id city_name -_id ",
       },
     })
     .populate({
