@@ -99,3 +99,19 @@ export interface AddOn {
   limit?: number;
   price: number;
 }
+
+export interface PaymentBase {
+  order_id: string;
+  razor_pay_id: string;
+  transaction_stamp: Date;
+  user_id: mongoose.Types.ObjectId | null;
+  status: number;
+  payment_amount: {
+    basic_total: number;
+    tax_total: number;
+    original_total: number;
+    discount: number;
+    promotion: number;
+    total_add_on: number;
+  };
+}
