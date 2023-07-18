@@ -19,47 +19,68 @@ export const createPaymentOrder = (req: Request, res: Response) => {
   });
 
   const options = {
-    amount: parseInt(req.query.amount?.toString()!) * 100, // amount in the smallest currency unit
+    amount: parseInt(req.query.amount?.toString()!) * 100,
     currency: "INR",
   };
 
-  instance.orders.create(options, (err, order) => {
-    res.status(200).send(order);
-  });
+  try {
+    instance.orders.create(options, (err, order) => {
+      res.status(200).send(order);
+    });
+  } catch (e) {
+    res.status(400).json({ message: "Somthing bad happen!", error: e });
+  }
 };
 
 export const validatePayment = async (req: Request, res: Response) => {
-  const sec_key = process.env.RZP_KEYSEC ?? "";
+  const session = mongoose.startSession();
+  try {
+    (await session).startTransaction();
 
-  const order_id = req.body.rzpinfo.razorpay_order_id;
-  const razor_pay_id = req.body.rzpinfo.razorpay_payment_id;
-  const signature = req.body.rzpinfo.razorpay_signature;
+    const sec_key = process.env.RZP_KEYSEC ?? "";
 
-  const hash = createHmac("sha256", sec_key)
-    .update(`${order_id}|${razor_pay_id}`)
-    .digest("hex");
+    const order_id = req.body.rzpinfo.razorpay_order_id;
+    const razor_pay_id = req.body.rzpinfo.razorpay_payment_id;
+    const signature = req.body.rzpinfo.razorpay_signature;
 
-  if (hash === signature) {
-    const token: any = req.headers.token;
+    const hash = createHmac("sha256", sec_key)
+      .update(`${order_id}|${razor_pay_id}`)
+      .digest("hex");
 
-    const decode: JwtPayload = <JwtPayload>jwt.decode(token);
-    const findUser = await userModel.findOne({ email: decode.email }).exec();
+    if (hash === signature) {
+      const token: any = req.headers.token;
 
-    let data: PaymentBase = {
-      order_id: req.body.rzpinfo.razorpay_order_id,
-      razor_pay_id: req.body.rzpinfo.razorpay_payment_id,
-      transaction_stamp: new Date(),
-      user_id: (findUser?._id as mongoose.Types.ObjectId) ?? null,
-      status: 1,
-      payment_amount: req.body.payment,
-    };
-    const newPayment = new paymentModel(data);
-    newPayment.save();
+      const decode: JwtPayload = <JwtPayload>jwt.decode(token);
+      const findUser = await userModel.findOne({ email: decode.email }).exec();
+
+      let data: PaymentBase = {
+        order_id: req.body.rzpinfo.razorpay_order_id,
+        razor_pay_id: req.body.rzpinfo.razorpay_payment_id,
+        transaction_stamp: new Date(),
+        user_id: (findUser?._id as mongoose.Types.ObjectId) ?? null,
+        status: 1,
+        payment_amount: req.body.payment,
+      };
+      const newPayment = new paymentModel(data);
+      newPayment.save();
+
+      // Validate Seat
+      // const bookingData;
+
+      // Add in Booking table
+
+      res
+        .status(200)
+        .json({ payment: 0, message: "Payment Successfully Validate" });
+    } else {
+      res.status(400).json({ payment: 0, message: "Invalid Payment" });
+    }
+
+    (await session).commitTransaction();
+  } catch (e) {
     res
-      .status(200)
-      .json({ payment: 0, message: "Payment Successfully Validate" });
-  } else {
-    res.status(400).json({ payment: 0, message: "Invalid Payment" });
+      .status(400)
+      .json({ payment: 0, message: "Something Bad happen!", error: e });
   }
 };
 
