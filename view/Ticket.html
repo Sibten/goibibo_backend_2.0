@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ticket</title>
+  </head>
+  <style>
+    .head{
+        background-image: linear-gradient( 111.4deg,  rgba(7,7,9,1) 6.5%, rgba(27,24,113,1) 93.2% );
+        padding: 5px;
+        text-align: right;
+        color: white;
+    }
+    .sec-1{
+        width: 30rem;
+        display: flex;
+        justify-content: space-between;
+    }
+    .sec-2 {
+        width: 48rem;
+      margin-top: 10px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .title {
+      color: gray;
+    }
+    .value {
+      text-transform: uppercase;
+    }
+  </style>
+
+  <body>
+    <div
+      style="
+        border: 1px solid gray;
+        border-radius: 20px;
+        height: max-content;
+        overflow: hidden;
+        font-family: Arial, Helvetica, sans-serif;
+      "
+    >
+      <div class="head">
+        <p
+          style="
+            font-size: large;
+            text-align: right;
+            font-size: larger;
+            font-weight: bold;
+          "
+        >
+          Boarding Pass
+        </p>
+      </div>
+      <div style="padding-left: 20px">
+        <div class="sec-1">
+            <div>               
+                <p class="title">Passanger Name</p>
+                <p class="value">Sibten Shekh</p>
+            </div>
+            <div>
+                <p class="title">Gender</p>
+                <p class="value">Male</p>
+            </div>
+            <div>
+                <p class="title">Age</p>
+                <p class="value">21 Years</p>
+            </div>
+        </div>
+        <div class="sec-2">
+          <div class="sec">
+            <p class="title">From</p>
+            <p class="value">
+              <span style="font-weight: bold">Delhi (DEl) </span>
+              <p style="color: rgb(170, 170, 170); font-size: small;">Indiara Ghandi International Airport </p>
+            </p>
+          </div>
+          <div class="sec">
+            <p class="title">To</p>
+            <p class="value">
+              <span style="font-weight: bold">Mumbai (BOM) </span>
+              <p style="color: rgb(170, 170, 170); font-size: small;">Chhatrapti Shivaji Maharaj International Airport </p>
+            </p>
+          </div>
+          <div class="sec">
+            <p class="title">Departure Date</p>
+            <p class="value">
+              <span style="font-weight: bold">02 August, 2023 </span>
+              
+            </p>
+          </div>
+        </div>
+        <div>
+
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
