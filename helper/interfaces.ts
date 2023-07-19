@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 
+
 export interface FileParams {
   Bucket: string;
   Key: string;
@@ -82,7 +83,6 @@ export interface RuleBase {
   luggage: Array<Luggage>;
 }
 
-
 export interface Offer {
   offer_name: string;
   referal_code: string;
@@ -100,18 +100,71 @@ export interface AddOn {
   price: number;
 }
 
+export interface PaymentDetails {
+  basic_total: number;
+  tax_total: number;
+  original_total: number;
+  discount: number;
+  promotion: number;
+  total_add_on: number;
+}
+
 export interface PaymentBase {
   order_id: string;
   razor_pay_id: string;
   transaction_stamp: Date;
   user_id: mongoose.Types.ObjectId | null;
   status: number;
-  payment_amount: {
-    basic_total: number;
-    tax_total: number;
-    original_total: number;
-    discount: number;
-    promotion: number;
-    total_add_on: number;
+  payment_amount: PaymentDetails;
+}
+
+export interface SeatBase {
+  seat_no: string;
+  type: number;
+  price: number | null;
+}
+
+export interface BookingData {
+  booking_stamp: Date;
+  PNR_no: number;
+  user_id: mongoose.Types.ObjectId | null;
+  class_type: number;
+  ticket_email: string;
+  status: number;
+  jouerny_info: {
+    departure_date: Date;
+    return_date: Date | null;
+    destination_city: mongoose.Types.ObjectId | null;
+    source_city: mongoose.Types.ObjectId | null;
+    departure_flight: mongoose.Types.ObjectId | null;
+    return_flight: mongoose.Types.ObjectId | null;
+    peoples: Array<{
+      type: number;
+      first_name: string;
+      last_name: string;
+      age: number;
+      gender: string;
+      seat_no: {
+        seat_no: string;
+        type: number;
+        price: number;
+      };
+      rtn_seat_no: {
+        seat_no: string;
+        type: number;
+        price: number;
+      };
+    }>;
+    infants: Array<{
+      first_name: string;
+      last_name: string;
+      age: number;
+      gender: string;
+    }>;
   };
+  addons: {
+    departure_addons: Array<AddOn>;
+    return_addons: Array<AddOn>;
+  };
+  payment: mongoose.Types.ObjectId | null;
 }

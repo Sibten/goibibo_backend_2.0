@@ -8,6 +8,7 @@ import {
   SeatAvalibility,
   BookedSeats,
   Timing,
+  SeatBase,
 } from "../helper/interfaces";
 import { routeModel } from "../model/route.model";
 import { Flightclass, FlightStatus } from "../helper/enums";
@@ -188,8 +189,6 @@ export const getFlightDetails = async (req: Request, res: Response) => {
   res.status(200).send(data);
 };
 
-
-
 export const getMyAirlineFlights = async (req: Request, res: Response) => {
   let token: any = req.headers.token;
   let decode: JwtPayload = <JwtPayload>jwt.decode(token);
@@ -206,4 +205,123 @@ export const getMyAirlineFlights = async (req: Request, res: Response) => {
   res.status(200).send(data);
 };
 
+export const addBookedSeat = async (req: Request, res: Response) => {
+  const findFlight = await flightModel
+    .findOne({
+      flight_no: req.body.flight_no,
+    })
+    .exec();
 
+  const avaliable_seat = findFlight?.available_seats.find(
+    (s) =>
+      s.date?.toDateString() == new Date(req.body.travel_date).toDateString()
+  );
+
+  const booked_seat = findFlight?.booked_seats.find(
+    (s) =>
+      s.date?.toDateString() == new Date(req.body.travel_date).toDateString()
+  );
+
+  let seats: Array<string> = [];
+
+  const seatData: Array<SeatBase> = req.body.booking_seat;
+
+  seatData?.forEach((s) => seats.push(s.seat_no));
+
+  try {
+    switch (req.body.travel_class) {
+      case Flightclass.Business:
+        seats.forEach((s) => {
+          if (booked_seat?.BC.includes(s)) {
+            throw new Error("Seat already booked");
+          }
+        });
+
+        await flightModel
+        .findOneAndUpdate(
+          {
+            flight_no: req.body.flight_no,
+            "booked_seats.date": req.body.travel_date,
+          },
+          {
+            $set: {
+              "available_seats.$.BC": avaliable_seat?.BC! - seats.length,
+            },
+            $push: { "booked_seats.$.BC": { $each: seats } },
+          }
+        )
+        .exec();
+
+        break;
+      case Flightclass.Economy:
+        seats.forEach((s) => {
+          if (booked_seat?.EC.includes(s)) {
+            throw new Error("Seat already booked");
+          }
+        });
+        await flightModel
+          .findOneAndUpdate(
+            {
+              flight_no: req.body.flight_no,
+              "booked_seats.date": req.body.travel_date,
+            },
+            {
+              $set: {
+                "available_seats.$.EC": avaliable_seat?.EC! - seats.length,
+              },
+              $push: { "booked_seats.$.EC": { $each: seats } },
+            }
+          )
+          .exec();
+
+        break;
+      case Flightclass.FirstClass:
+        seats.forEach((s) => {
+          if (booked_seat?.FC.includes(s)) {
+            throw new Error("Seat already booked");
+          }
+        });
+        await flightModel
+          .findOneAndUpdate(
+            {
+              flight_no: req.body.flight_no,
+              "booked_seats.date": req.body.travel_date,
+            },
+            {
+              $set: {
+                "available_seats.$.FC": avaliable_seat?.FC! - seats.length,
+              },
+              $push: { "booked_seats.$.FC": { $each: seats } },
+            }
+          )
+          .exec();
+
+        break;
+      case Flightclass.PremiumEconomy:
+        seats.forEach((s) => {
+          if (booked_seat?.PE.includes(s)) {
+            throw new Error("Seat already booked");
+          }
+        });
+        await flightModel
+          .findOneAndUpdate(
+            {
+              flight_no: req.body.flight_no,
+              "booked_seats.date": req.body.travel_date,
+            },
+            {
+              $set: {
+                "available_seats.$.PE": avaliable_seat?.PE! - seats.length,
+              },
+              $push: { "booked_seats.$.PE": { $each: seats } },
+            }
+          )
+          .exec();
+
+        break;
+    }
+    res.status(200).json({ add: 1, message: "Seat Booked!" });
+  } catch (e) {
+    res.status(400).json({ add: 0, message: "Error!", error: e });
+  }
+};

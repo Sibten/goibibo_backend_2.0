@@ -1,4 +1,4 @@
-export enum bookingStatus {
+export enum BookingStatus {
   Upcoming,
   Completed,
   Closed,
@@ -17,9 +17,9 @@ export enum FlightStatus {
 }
 
 export enum roles {
-  SuperAdmin,
-  Admin,
-  User,
+  User, // 0
+  Admin, // 1
+  SuperAdmin, // 2
 }
 
 export enum gender {
@@ -27,7 +27,6 @@ export enum gender {
   Female,
   Other,
 }
-
 
 export enum Flightclass {
   Economy,

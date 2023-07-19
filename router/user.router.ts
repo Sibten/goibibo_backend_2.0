@@ -8,6 +8,7 @@ import {
   updateUser,
   getUserDetails,
   uploadProfilePhoto,
+  getMyTrips,
 } from "../controller/user.controller";
 import { roles } from "../helper/enums";
 import {
@@ -19,14 +20,30 @@ export const userRouter: Router = e.Router();
 
 userRouter.post("/generateotp", generateOTP);
 userRouter.post("/validateotp", validateOTP);
+
+userRouter.use((req, res, next) =>
+  authenticateUser(req, res, next, roles.User)
+);
 userRouter.put("/updateprofile", updateUser);
 userRouter.post("/updateprofile/uploadphoto", uploadProfilePhoto);
 userRouter.post("/login", loginViaCredential);
 userRouter.get("/mydetails", getUserDetails);
+userRouter.get("/my_trips", getMyTrips);
 
-userRouter.use((req, res, next) =>
-  authenticateUser(req, res, next, roles.SuperAdmin)
+userRouter.post(
+  "/addAdmin",
+  userRouter.use((req, res, next) =>
+    authenticateUser(req, res, next, roles.SuperAdmin)
+  ),
+  insertAirlineAdmin
+);
+userRouter.get(
+  "/adminDetails",
+  userRouter.use((req, res, next) =>
+    authenticateUser(req, res, next, roles.SuperAdmin)
+  ),
+  getAirlineAdminDetails
 );
 
-userRouter.post("/addAdmin", insertAirlineAdmin);
-userRouter.get("/adminDetails", getAirlineAdminDetails);
+
+

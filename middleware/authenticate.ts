@@ -15,8 +15,7 @@ export const authenticateUser = async (
 
     const findrole = await roleModel.findById(decode.role).exec();
     let verfied = jwt.verify(token, seckey);
-
-    if (verfied && findrole?.role_id == role) {
+    if (verfied && findrole?.role_id! >= role) {
       next();
     } else {
       res.status(401).json({ error: 1, message: "unauthorized access!" });

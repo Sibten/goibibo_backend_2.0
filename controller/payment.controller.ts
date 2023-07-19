@@ -1,13 +1,17 @@
 import Razorpay from "razorpay";
 import env from "dotenv";
-import { Request, Response, request } from "express";
+import { Request, Response } from "express";
 import { createHmac } from "crypto";
 import { paymentModel } from "../model/payment.model";
-import { PaymentBase } from "../helper/interfaces";
+import { PaymentBase, SeatBase, BookingData } from "../helper/interfaces";
 import { userModel } from "../model/user.model";
 import mongoose from "mongoose";
-import { JwtPayload } from "jsonwebtoken";
-import jwt from "jsonwebtoken";
+import jwt, { JwtPayload } from "jsonwebtoken";
+
+import { flightModel } from "../model/flight.model";
+import { BookingStatus, Flightclass } from "../helper/enums";
+import { bookingModel } from "../model/booking.model";
+import { cityModel } from "../model/city.model";
 env.config();
 
 export const createPaymentOrder = (req: Request, res: Response) => {
@@ -32,6 +36,134 @@ export const createPaymentOrder = (req: Request, res: Response) => {
   }
 };
 
+const updateFlight = async (
+  flight_no: string,
+  travel_date: string,
+  booking_seat: Array<SeatBase>,
+  travel_class: number
+) => {
+  const findFlight = await flightModel
+    .findOne({
+      flight_no: flight_no,
+    })
+    .exec();
+
+  const avaliable_seat = findFlight?.available_seats.find(
+    (s) => s.date?.toDateString() == new Date(travel_date).toDateString()
+  );
+
+  const booked_seat = findFlight?.booked_seats.find(
+    (s) => s.date?.toDateString() == new Date(travel_date).toDateString()
+  );
+
+  let seats: Array<string> = [];
+
+  const seatData: Array<SeatBase> = booking_seat;
+
+  seatData?.forEach((s) => seats.push(s.seat_no));
+
+  switch (travel_class) {
+    case Flightclass.Business:
+      seats.forEach((s) => {
+        if (booked_seat?.BC.includes(s)) {
+          throw new Error("Seat already booked");
+        }
+      });
+
+      await flightModel
+        .findOneAndUpdate(
+          {
+            flight_no: flight_no,
+            "booked_seats.date": travel_date,
+          },
+          {
+            $set: {
+              "available_seats.$.BC": avaliable_seat?.BC! - seats.length,
+            },
+            $push: { "booked_seats.$.BC": { $each: seats } },
+          }
+        )
+        .exec();
+
+      break;
+    case Flightclass.Economy:
+      seats.forEach((s) => {
+        if (booked_seat?.EC.includes(s)) {
+          throw new Error("Seat already booked");
+        }
+      });
+
+      const seat_no = avaliable_seat?.EC! - seats.length;
+
+      await flightModel
+        .findOneAndUpdate(
+          {
+            flight_no: flight_no,
+            "booked_seats.date": travel_date,
+          },
+          {
+            $set: {
+              "available_seats.$.EC": seat_no,
+            },
+            $push: { "booked_seats.$.EC": { $each: seats } },
+          }
+        )
+        .exec();
+
+      break;
+    case Flightclass.FirstClass:
+      seats.forEach((s) => {
+        if (booked_seat?.FC.includes(s)) {
+          throw new Error("Seat already booked");
+        }
+      });
+      await flightModel
+        .findOneAndUpdate(
+          {
+            flight_no: flight_no,
+            "booked_seats.date": travel_date,
+          },
+          {
+            $set: {
+              "available_seats.$.FC": avaliable_seat?.FC! - seats.length,
+            },
+            $push: { "booked_seats.$.FC": { $each: seats } },
+          }
+        )
+        .exec();
+
+      break;
+    case Flightclass.PremiumEconomy:
+      seats.forEach((s) => {
+        if (booked_seat?.PE.includes(s)) {
+          throw new Error("Seat already booked");
+        }
+      });
+      await flightModel
+        .findOneAndUpdate(
+          {
+            flight_no: flight_no,
+            "booked_seats.date": travel_date,
+          },
+          {
+            $set: {
+              "available_seats.$.PE": avaliable_seat?.PE! - seats.length,
+            },
+            $push: { "booked_seats.$.PE": { $each: seats } },
+          }
+        )
+        .exec();
+
+      break;
+  }
+  return findFlight?._id ?? null;
+};
+
+const findCity = async (code: string) => {
+  const data = await cityModel.findOne({ airport_code: code }).exec();
+  return data?._id ?? null;
+};
+
 export const validatePayment = async (req: Request, res: Response) => {
   const session = mongoose.startSession();
   try {
@@ -48,6 +180,20 @@ export const validatePayment = async (req: Request, res: Response) => {
       .digest("hex");
 
     if (hash === signature) {
+      const IncomingData = {
+        dep_flight_no: req.body.dep_flight_no,
+        rtn_flight_no: req.body.rtn_flight_no ?? null,
+        payment: req.body.payment,
+        travel_class: parseInt(req.body.travel_class),
+        dep_date: req.body.dep_date,
+        return_date: req.body.rtn_date ?? null,
+        dep_booking_seat: req.body.dep_booking_seat, // Array of Seat base
+        rtn_booking_seat: req.body.rtn_booking_seat ?? null, // Array of Seat base
+        email: req.body.ticket_email,
+        destn_city_code: req.body.destn_city_code,
+        source_city_code: req.body.source_city_code,
+      };
+
       const token: any = req.headers.token;
 
       const decode: JwtPayload = <JwtPayload>jwt.decode(token);
@@ -59,28 +205,72 @@ export const validatePayment = async (req: Request, res: Response) => {
         transaction_stamp: new Date(),
         user_id: (findUser?._id as mongoose.Types.ObjectId) ?? null,
         status: 1,
-        payment_amount: req.body.payment,
+        payment_amount: IncomingData.payment,
       };
+
+      const dep_flight = await updateFlight(
+        IncomingData.dep_flight_no,
+        IncomingData.dep_date,
+        IncomingData.dep_booking_seat,
+        IncomingData.travel_class
+      );
+
+      let rtn_flight = null;
+      if (IncomingData.rtn_flight_no && IncomingData.return_date) {
+        rtn_flight = await updateFlight(
+          IncomingData.rtn_flight_no,
+          IncomingData.return_date,
+          IncomingData.rtn_booking_seat,
+          IncomingData.travel_class
+        );
+      }
+
+      const destn_city = await findCity(IncomingData.destn_city_code);
+      const source_city = await findCity(IncomingData.source_city_code);
+
       const newPayment = new paymentModel(data);
       newPayment.save();
 
-      // Validate Seat
-      // const bookingData;
+      const bookingData: BookingData = {
+        booking_stamp: new Date(),
+        PNR_no: Date.now(),
+        user_id: (findUser?._id as mongoose.Types.ObjectId) ?? null,
+        class_type: IncomingData.travel_class,
+        ticket_email: IncomingData.email,
+        status: BookingStatus.Upcoming,
+        jouerny_info: {
+          departure_date: IncomingData.dep_date,
+          return_date: IncomingData.return_date,
+          destination_city: destn_city,
+          source_city: source_city,
+          departure_flight: dep_flight,
+          return_flight: rtn_flight,
+          peoples: [...req.body.peoples],
+          infants: req.body.infants,
+        },
+        addons: {
+          departure_addons: req.body.addons.departure_addons,
+          return_addons: req.body.return_addons,
+        },
+        payment: newPayment._id,
+      };
 
-      // Add in Booking table
+      const newBooking = new bookingModel(bookingData);
+      await newBooking.save();
 
-      res
-        .status(200)
-        .json({ payment: 0, message: "Payment Successfully Validate" });
+      res.status(200).json({
+        payment: 1,
+        message: "Payment Succesful and Booking Confirmed!",
+      });
     } else {
-      res.status(400).json({ payment: 0, message: "Invalid Payment" });
+      throw new Error("Invalid Transaction");
     }
 
     (await session).commitTransaction();
   } catch (e) {
     res
       .status(400)
-      .json({ payment: 0, message: "Something Bad happen!", error: e });
+      .json({ payment: 0, message: "Something bad happen!", error: e });
   }
 };
 

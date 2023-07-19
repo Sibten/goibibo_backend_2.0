@@ -1,7 +1,10 @@
 import e from "express";
 import { authenticateUser } from "../middleware/authenticate";
 import { roles } from "../helper/enums";
-import { getMyAirlineFlights } from "../controller/flights.controller";
+import {
+  addBookedSeat,
+  getMyAirlineFlights,
+} from "../controller/flights.controller";
 import {
   scheduleFlight,
   getFlightDetails,
@@ -17,4 +20,4 @@ flightRouter.use((req, res, next) =>
 
 flightRouter.post("/schedule", scheduleFlight);
 flightRouter.get("/my_airline_flights", getMyAirlineFlights);
-
+flightRouter.post("/add_booking_data", addBookedSeat);

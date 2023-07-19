@@ -13,6 +13,8 @@ import { roles } from "../helper/enums";
 import { roleModel } from "../model/roles.model";
 import { uploadImage } from "../helper/awsmethods";
 import { FileParams } from "../helper/interfaces";
+import { bookingModel } from "../model/booking.model";
+import { JwtPayload } from "jsonwebtoken";
 
 export const addUser = async (req: Request, res: Response): Promise<void> => {
   const validate = validateUser(req.body);
@@ -64,7 +66,6 @@ export const addUser = async (req: Request, res: Response): Promise<void> => {
     });
   }
 };
-
 
 export const uploadProfilePhoto = async (req: Request, res: Response) => {
   let data: any = Object.assign({}, req.body);
@@ -283,4 +284,38 @@ export const getUserDetails = async (req: Request, res: Response) => {
     .populate({ path: "role", select: "role_id role_name -_id" })
     .exec();
   res.status(200).json(findUser);
+};
+
+export const getMyTrips = async (req: Request, res: Response) => {
+  const token: any = req.headers.token;
+  const decode: JwtPayload = <JwtPayload>jwt.decode(token);
+  const findUser = await userModel.findOne({ email: decode.email }).exec();
+
+  const bookingData = await bookingModel
+    .find({ user_id: findUser?._id }, { __v: 0, createdAt: 0, updatedAt: 0 })
+    .populate({ path: "jouerny_info.destination_city", select: "-_id -__v" })
+    .populate({ path: "jouerny_info.source_city", select: "-_id -__v" })
+    .populate({
+      path: "jouerny_info.departure_flight",
+      select: "-_id flight_no",
+      populate: {
+        path: "airline_id",
+        select: "-_id -__v",
+      },
+    })
+    .populate({
+      path: "jouerny_info.return_flight",
+      select: "-_id flight_no",
+      populate: {
+        path: "airline_id",
+        select: "-_id -__v",
+      },
+    })
+    .populate({
+      path: "payment",
+      select: "-_id -__v -createdAt -updatedAt -user_id",
+    })
+    .exec();
+
+  res.status(200).send(bookingData);
 };

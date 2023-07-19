@@ -9,7 +9,6 @@ export const getAddOns = async (req: Request, res: Response) => {
         {},
         {
           __v: 0,
-          _id: 0,
         }
       )
       .exec();
