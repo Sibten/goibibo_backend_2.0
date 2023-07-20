@@ -12,6 +12,7 @@ import { flightModel } from "../model/flight.model";
 import { BookingStatus, Flightclass } from "../helper/enums";
 import { bookingModel } from "../model/booking.model";
 import { cityModel } from "../model/city.model";
+import { sendMail } from "../helper/sendMail.helper";
 env.config();
 
 export const createPaymentOrder = (req: Request, res: Response) => {
@@ -262,6 +263,8 @@ export const validatePayment = async (req: Request, res: Response) => {
         payment: 1,
         message: "Payment Succesful and Booking Confirmed!",
       });
+
+      // sendMail()
     } else {
       throw new Error("Invalid Transaction");
     }
@@ -285,4 +288,24 @@ export const getMyPayments = async (req: Request, res: Response) => {
     .exec();
 
   res.status(200).send(findPayments);
+};
+
+export const IssueRefund = async (req: Request, res: Response) => {
+  const key_id = process.env.RZP_KEYID ?? "";
+  const sec_key = process.env.RZP_KEYSEC ?? "";
+  const instance = new Razorpay({
+    key_id: key_id,
+    key_secret: sec_key,
+  });
+  const paymentId = req.body.payment_id! ?? "";
+  try {
+    const d = instance.payments.refund(paymentId, {
+      speed: "normal",
+    });
+    res
+      .status(200)
+      .json({ message: "Payment Refund Issues generated!", data: d });
+  } catch (e) {
+    res.status(400).json({ message: "Somthing bad happen!", error: e });
+  }
 };

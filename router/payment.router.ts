@@ -1,5 +1,6 @@
 import e from "express";
 import {
+  IssueRefund,
   createPaymentOrder,
   getMyPayments,
   validatePayment,
@@ -15,3 +16,4 @@ paymentRouter.use((req, res, next) =>
 paymentRouter.post("/create", createPaymentOrder);
 paymentRouter.post("/validate", validatePayment);
 paymentRouter.get("/my_payments", getMyPayments);
+paymentRouter.post("/issue_refund", IssueRefund);
