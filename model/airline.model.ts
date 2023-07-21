@@ -9,6 +9,7 @@ const airlineSchema = new mongoose.Schema(
     airline_name: String,
     airline_location: String,
     airline_code: String,
+    airline_icon: String,
   },
   { timestamps: true }
 );

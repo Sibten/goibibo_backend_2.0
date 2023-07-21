@@ -1,11 +1,41 @@
 import { airlineModel } from "../model/airline.model";
 import { Request, Response } from "express";
 import { validateAirline } from "../validator/airline.validate";
+import { JwtPayload } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
+import { userModel } from "../model/user.model";
+import { airlineAdminModel } from "../model/airline_admin.model";
+import { uploadImage } from "../helper/awsmethods";
 
 export const getAirlines = async (req: Request, res: Response) => {
   try {
     let findAirlines = await airlineModel.find({}).exec();
     res.status(200).send(findAirlines);
+  } catch (e) {
+    res.status(500).json({
+      error: 1,
+      error_desc: e,
+    });
+  }
+};
+
+export const getMyAirlinesDetails = async (req: Request, res: Response) => {
+  try {
+    let token: any = req.headers.token;
+
+    let decode: JwtPayload = <JwtPayload>jwt.decode(token);
+    let findUser = await userModel.findOne({ email: decode.email }).exec();
+
+    const findAirlineAdmin = await airlineAdminModel
+      .findOne({
+        user_id: findUser?._id,
+      })
+      .exec();
+
+    const findAirline = await airlineModel
+      .findById(findAirlineAdmin?.airline_id, { _id: 0, __v: 0 })
+      .exec();
+    res.status(200).send(findAirline);
   } catch (e) {
     res.status(500).json({
       error: 1,
@@ -58,8 +88,19 @@ export const updateAirline = async (req: Request, res: Response) => {
   let valid = validateAirline(req.body);
   if (!valid["error"]) {
     try {
-      let findAirline = await airlineModel
-        .findOne({ airline_name: req.body.airline_name })
+      let token: any = req.headers.token;
+
+      let decode: JwtPayload = <JwtPayload>jwt.decode(token);
+      let findUser = await userModel.findOne({ email: decode.email }).exec();
+
+      const findAirlineAdmin = await airlineAdminModel
+        .findOne({
+          user_id: findUser?._id,
+        })
+        .exec();
+
+      const findAirline = await airlineModel
+        .findById(findAirlineAdmin?.airline_id, { _id: 0, __v: 0 })
         .exec();
       if (findAirline) {
         await airlineModel
@@ -97,6 +138,55 @@ export const updateAirline = async (req: Request, res: Response) => {
       messsage: "validation error",
       error_desc: valid["error"],
     });
+  }
+};
+
+export const updateIcon = async (req: Request, res: Response) => {
+  let file: any = Object.assign({}, req.files);
+
+  if (file.file) {
+    const fileParams = {
+      Bucket: "goibibo-sibten",
+      Key: `airlines/${file.file.name.replaceAll(" ", "")}`,
+      Body: file.file.data,
+      ContentType: file.file.mimetype,
+    };
+
+    let url = await uploadImage(fileParams);
+    if (url) {
+      let token: any = req.headers.token;
+
+      let decode: JwtPayload = <JwtPayload>jwt.decode(token);
+      let findUser = await userModel.findOne({ email: decode.email }).exec();
+
+      try {
+        const findAirlineAdmin = await airlineAdminModel
+          .findOne({
+            user_id: findUser?._id,
+          })
+          .exec();
+
+        const findAirline = await airlineModel
+          .findById(findAirlineAdmin?.airline_id)
+          .exec();
+
+        await airlineModel
+          .findByIdAndUpdate(findAirline?._id, {
+            $set: { airline_icon: url },
+          })
+          .exec();
+
+        res.status(200).json({ update: 1, message: "Icon Updated!" });
+      } catch (e) {
+        res
+          .status(400)
+          .json({ update: 0, message: "Unable to update", Error: e });
+      }
+    } else {
+      res.status(400).json({ update: 0, message: "Unable to generate URL" });
+    }
+  } else {
+    res.status(400).json({ update: 0, message: "Unable to update" });
   }
 };
 
