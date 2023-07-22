@@ -201,6 +201,29 @@ export const getMyAirlineFlights = async (req: Request, res: Response) => {
     .exec();
   const data = await flightModel
     .find({ airline_id: findAirlineId?.airline_id })
+    .populate({
+      path: "route_id",
+      select: "-_id -__v",
+      populate: {
+        path: "source_city destination_city stops",
+        select: "airport_name airport_code city_id city_name -_id",
+      },
+    })
+    .populate({
+      path: "airline_id",
+      select: "airline_id airline_name airline_icon airline_code -_id",
+    })
+    .populate({
+      path: "fare",
+      select: "-fare._id -_id -__v -createdAt -updatedAt",
+    })
+    .populate({ path: "airbus_id", select: "airbus_code" })
+    .populate({
+      path: "rule",
+      select: " -_id -__v -createdAt -updatedAt",
+    })
+    .select("-_id -__v -createdAt -updatedAt")
+    .sort({ "timing.source_time": 1 })
     .exec();
   res.status(200).send(data);
 };
