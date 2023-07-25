@@ -37,3 +37,15 @@ export const createAirbus = (req: Request, res: Response) => {
 
   res.status(200).json({ add: 1, message: "Airbus Created!" });
 };
+
+export const getAirbus = async (req: Request, res: Response) => {
+  console.log("---");
+  try {
+    const data = await airbusModel
+      .find({}, { __v: 0, _id: 0, "seat_map._id": 0 })
+      .exec();
+    res.status(200).send(data);
+  } catch (e) {
+    res.status(400).json({ error: 1, message: e });
+  }
+};
