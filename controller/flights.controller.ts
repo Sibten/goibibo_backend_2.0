@@ -90,11 +90,11 @@ export const scheduleFlight = async (req: Request, res: Response) => {
   };
 
   const findFare = await fareModel
-    .findOne({ airline_id: findAirline?._id })
+    .findOne({ airline_id: findAirline?.airline_id })
     .exec();
 
   const findRule = await ruleModel
-    .findOne({ airline_id: findAirline?._id })
+    .findOne({ airline_id: findAirline?.airline_id })
     .exec();
 
   if (
@@ -145,7 +145,7 @@ export const scheduleFlight = async (req: Request, res: Response) => {
           }
         )
         .exec();
-      res.status(400).json({ add: 1, message: "Flight Schedulded!" });
+      res.status(200).json({ add: 1, message: "Flight Schedulded!" });
     } catch (e) {
       res.status(400).json({ add: 0, message: "error", error: e });
     }
