@@ -62,6 +62,7 @@ export interface RouteBase {
   source_city: mongoose.Types.ObjectId | null;
   destination_city: mongoose.Types.ObjectId | null;
   stops: Array<mongoose.Types.ObjectId | null>;
+  added_by: mongoose.Types.ObjectId | null;
   distance: number;
 }
 interface ClassFare {

@@ -14,6 +14,7 @@ const routeSchema = new mongoose.Schema(
     },
     stops: [{ type: mongoose.Types.ObjectId, ref: "city" }],
     distance: Number,
+    added_by: { type: mongoose.Types.ObjectId, ref: "airline" },
   },
   { timestamps: true }
 );

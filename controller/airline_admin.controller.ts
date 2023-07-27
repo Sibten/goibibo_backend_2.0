@@ -1,21 +1,10 @@
 import { airlineAdminModel } from "../model/airline_admin.model";
 import { Request, Response } from "express";
-import { userModel } from "../model/user.model";
-import { roles } from "../helper/enums";
-import { roleModel } from "../model/roles.model";
+
 
 export const insertAirlineAdmin = async (req: Request, res: Response) => {
   try {
-    const admindetails = await roleModel
-      .findOne({ role_id: roles.Admin })
-      .exec();
-
-    await userModel
-      .findByIdAndUpdate(req.body.user_id, {
-        $set: { role: admindetails?._id },
-      })
-      .exec();
-
+    console.log("hello");
     const newAdmin = new airlineAdminModel(req.body);
     await newAdmin.save();
 

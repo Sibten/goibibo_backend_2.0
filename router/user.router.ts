@@ -30,20 +30,11 @@ userRouter.post("/login", loginViaCredential);
 userRouter.get("/mydetails", getUserDetails);
 userRouter.get("/my_trips", getMyTrips);
 
-userRouter.post(
-  "/addAdmin",
-  userRouter.use((req, res, next) =>
-    authenticateUser(req, res, next, roles.SuperAdmin)
-  ),
-  insertAirlineAdmin
+userRouter.use((req, res, next) =>
+  authenticateUser(req, res, next, roles.SuperAdmin)
 );
-userRouter.get(
-  "/adminDetails",
-  userRouter.use((req, res, next) =>
-    authenticateUser(req, res, next, roles.SuperAdmin)
-  ),
-  getAirlineAdminDetails
-);
+userRouter.post("/addAdmin", insertAirlineAdmin);
+userRouter.get("/adminDetails", getAirlineAdminDetails);
 
 
 

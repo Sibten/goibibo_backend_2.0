@@ -5,8 +5,6 @@ import { addRoute, getRouteDetails } from "../controller/route.controller";
 
 export const routeRouter = e.Router();
 
-// routeRouter.get("/")
-
 routeRouter.use((req, res, next) =>
   authenticateUser(req, res, next, roles.Admin)
 );

@@ -33,6 +33,7 @@ export const scheduleFlight = async (req: Request, res: Response) => {
     .findOne({ user_id: findUser?._id })
     .exec();
 
+
   const findAirlineDetails = await airlineModel
     .findById(findAirline?.airline_id)
     .exec();
@@ -90,28 +91,33 @@ export const scheduleFlight = async (req: Request, res: Response) => {
   };
 
   const findFare = await fareModel
-    .findOne({ airline_id: findAirline?.airline_id })
+    .findOne({ airline_id: findAirlineDetails?._id })
     .exec();
 
   const findRule = await ruleModel
-    .findOne({ airline_id: findAirline?.airline_id })
+    .findOne({ airline_id: findAirlineDetails?._id })
     .exec();
 
+  const findAdminAirline = await airlineModel
+    .findOne({ airline_code: process.env.ADMN_CODE ?? "ADMN" })
+    .exec();
+  console.log(findRule);
   if (
     sourceTime < destinationTime &&
     findRoute &&
+    (JSON.stringify(findRoute?.added_by) ==
+      JSON.stringify(findAirlineDetails?._id) ||
+      JSON.stringify(findRoute?.added_by) ==
+        JSON.stringify(findAdminAirline?._id)) &&
     findAirline &&
     findUser &&
-    findAirbus
+    findAirbus &&
+    findRule
   ) {
-    const findFlight = await flightModel
-      .find({
-        flight_no: `${findAirlineDetails?.airline_code}-${findRoute.route_id}-${findAirbus.airbus_code}`,
-      })
-      .exec();
-
     const FlightData: FlightBase = {
-      flight_no: `${findAirlineDetails?.airline_code}-${findRoute.route_id}-${findAirbus.airbus_code}`,
+      flight_no: `${findAirlineDetails?.airline_code}-${
+        findRoute.route_id?.split("-")[1]
+      }${findAirbus.airbus_code?.replaceAll("-", "")}`,
       airline_id: findAirlineDetails?._id ?? null,
       route_id: findRoute._id ?? null,
       airbus_id: findAirbus?._id ?? null,
