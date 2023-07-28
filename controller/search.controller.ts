@@ -26,10 +26,18 @@ import { FlightStatus, Flightclass } from "../helper/enums";
    });
    const curDate: Date = new Date();
    let date: Date = new Date(req.query.date?.toString()!);
+   let date2: Date;
    if (date.toDateString() == curDate.toDateString()) {
-     date = curDate;
+     date = new Date(curDate.setHours(curDate.getHours() + 1));
+     date2= new Date(
+       new Date(new Date(curDate).setDate(curDate.getDate() + 1)).setHours(0)
+     );
    }
-   const date2: Date = new Date(new Date(date).setDate(date.getDate() + 1));
+   else{
+    date2= new Date(
+      new Date(new Date(date).setDate(date.getDate() + 1)).setHours(0)
+    );
+   }
 
    let data: Object;
 
@@ -196,7 +204,12 @@ import { FlightStatus, Flightclass } from "../helper/enums";
                },
                status: FlightStatus.Schduleded,
              },
-             { "timing.$": 1, available_seats: 1, booked_seats: 1, flight_no : 1  }
+             {
+               "timing.$": 1,
+               available_seats: 1,
+               booked_seats: 1,
+               flight_no: 1,
+             }
            )
            .populate({
              path: "route_id",

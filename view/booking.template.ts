@@ -1,4 +1,12 @@
-<!DOCTYPE html>
+export const booking = (
+  date: Date,
+  dep_city: string,
+  des_city: string,
+  amt: number,
+  travellers: number,
+  travel_class: string
+) => {
+  return `<!DOCTYPE html>
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
@@ -68,16 +76,16 @@
 	</div>
 	<div class="content">
 		Hello sibten! Thank you for choosing Goibibo!, Kindly Verify the below ticket data.
-		<p> Date : 5 Aug, 2023</p>
+		<p> Date : ${new Date().toDateString()}</p>
 		<div class="ticketContainer">
 			<h3> Ticket Details</h3>
 			<ul>
-				<li>Departure Date :</li>
-				<li>Departure City :</li>
-				<li>Destination City :</li>
-				<li> Paid Amount : </li>
-				<li>Travellers : </li>
-				<li> Travelling Class : </li>
+				<li>Departure Date : ${date}</li>
+				<li>Departure City : ${dep_city}</li>
+				<li>Destination City : ${des_city} </li>
+				<li> Paid Amount : ${amt}</li>
+				<li>Travellers : ${travellers}</li>
+				<li> Travelling Class : ${travel_class}</li>
 			</ul>
 		</div>
 		<div>
@@ -111,4 +119,5 @@
 		
 	  </div>
 </body>
-</html>
+</html>`;
+};

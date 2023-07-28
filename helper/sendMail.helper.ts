@@ -11,7 +11,7 @@ const transporter = nodemailer.createTransport({
 
 export const sendMail = (email: string, subject: string, template: string) => {
   let mailoptions = {
-    from: process.env.MAIL,
+    from: `"Goibibo" <${process.env.MAIL}>`,
     to: email,
     subject: subject,
 

@@ -13,6 +13,8 @@ import { BookingStatus, Flightclass } from "../helper/enums";
 import { bookingModel } from "../model/booking.model";
 import { cityModel } from "../model/city.model";
 import { sendMail } from "../helper/sendMail.helper";
+import { booking } from "../view/booking.template";
+import { getFlightClass } from "../helper/Methods";
 env.config();
 
 export const createPaymentOrder = (req: Request, res: Response) => {
@@ -259,12 +261,24 @@ export const validatePayment = async (req: Request, res: Response) => {
       const newBooking = new bookingModel(bookingData);
       await newBooking.save();
 
+      const temp = booking(
+        bookingData.jouerny_info.departure_date,
+        IncomingData.source_city_code,
+        IncomingData.destn_city_code,
+        IncomingData.payment,
+        IncomingData.dep_booking_seat,
+        getFlightClass(bookingData.class_type)
+      );
+      const status = await sendMail(
+        bookingData.ticket_email,
+        "Goibibo Booking Confirmation",
+        temp
+      );
       res.status(200).json({
         payment: 1,
         message: "Payment Succesful and Booking Confirmed!",
+        mail: status,
       });
-
-      // sendMail()
     } else {
       throw new Error("Invalid Transaction");
     }
