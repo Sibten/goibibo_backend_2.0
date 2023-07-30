@@ -20,6 +20,7 @@ env.config();
 export const createPaymentOrder = (req: Request, res: Response) => {
   const key_id = process.env.RZP_KEYID ?? "";
   const sec_key = process.env.RZP_KEYSEC ?? "";
+  
   const instance = new Razorpay({
     key_id: key_id,
     key_secret: sec_key,
@@ -29,6 +30,8 @@ export const createPaymentOrder = (req: Request, res: Response) => {
     amount: parseInt(req.query.amount?.toString()!) * 100,
     currency: "INR",
   };
+
+  console.log(options)
 
   try {
     instance.orders.create(options, (err, order) => {
@@ -168,6 +171,7 @@ const findCity = async (code: string) => {
 };
 
 export const validatePayment = async (req: Request, res: Response) => {
+  console.log(req.body)
   const session = mongoose.startSession();
   try {
     (await session).startTransaction();
@@ -192,7 +196,7 @@ export const validatePayment = async (req: Request, res: Response) => {
         return_date: req.body.rtn_date ?? null,
         dep_booking_seat: req.body.dep_booking_seat, // Array of Seat base
         rtn_booking_seat: req.body.rtn_booking_seat ?? null, // Array of Seat base
-        email: req.body.ticket_email,
+        email: req.body.email,
         destn_city_code: req.body.destn_city_code,
         source_city_code: req.body.source_city_code,
       };
@@ -250,6 +254,9 @@ export const validatePayment = async (req: Request, res: Response) => {
           return_flight: rtn_flight,
           peoples: [...req.body.peoples],
           infants: req.body.infants,
+          address : req.body.address,
+          state : req.body.state,
+          pincode : parseInt(req.body.pincode),
         },
         addons: {
           departure_addons: req.body.addons.departure_addons,
@@ -260,24 +267,29 @@ export const validatePayment = async (req: Request, res: Response) => {
 
       const newBooking = new bookingModel(bookingData);
       await newBooking.save();
-
+      
       const temp = booking(
+        bookingData.jouerny_info.peoples[0].first_name,
+        bookingData.PNR_no,
         bookingData.jouerny_info.departure_date,
         IncomingData.source_city_code,
-        IncomingData.destn_city_code,
-        IncomingData.payment,
-        IncomingData.dep_booking_seat,
-        getFlightClass(bookingData.class_type)
+        IncomingData.destn_city_code,    
+        (bookingData.jouerny_info.peoples.length + bookingData.jouerny_info.infants.length),
+        getFlightClass(bookingData.class_type),
+        data.razor_pay_id,
       );
+      console.log(temp);
+      console.log(bookingData.ticket_email)
       const status = await sendMail(
         bookingData.ticket_email,
         "Goibibo Booking Confirmation",
         temp
-      );
+      )
+      
       res.status(200).json({
         payment: 1,
-        message: "Payment Succesful and Booking Confirmed!",
-        mail: status,
+        message: "Payment Succesful and Booking Confirmed!",   
+        status : status, 
       });
     } else {
       throw new Error("Invalid Transaction");

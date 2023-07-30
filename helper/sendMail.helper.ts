@@ -11,10 +11,9 @@ const transporter = nodemailer.createTransport({
 
 export const sendMail = (email: string, subject: string, template: string) => {
   let mailoptions = {
-    from: `"Goibibo" <${process.env.MAIL}>`,
+    from: `"Goibibo" <${process.env.MAIL ?? "testphp@mailtest.radixweb.net"}>`,
     to: email,
     subject: subject,
-
     html: template,
   };
   return new Promise((res, rej) => {

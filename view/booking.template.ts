@@ -1,10 +1,12 @@
 export const booking = (
+	name : string,
+	pnr : number,
   date: Date,
   dep_city: string,
   des_city: string,
-  amt: number,
   travellers: number,
-  travel_class: string
+  travel_class: string,
+  paymentId: string
 ) => {
   return `<!DOCTYPE html>
 <html lang="en">
@@ -75,17 +77,18 @@ export const booking = (
 		<h1>Booking Confirmation</h1>
 	</div>
 	<div class="content">
-		Hello sibten! Thank you for choosing Goibibo!, Kindly Verify the below ticket data.
+		Hello ${name}! Thank you for choosing Goibibo!, Kindly Verify the below ticket data.
 		<p> Date : ${new Date().toDateString()}</p>
 		<div class="ticketContainer">
 			<h3> Ticket Details</h3>
 			<ul>
-				<li>Departure Date : ${date}</li>
+	  			<li>PNR Number <h2>${pnr} </h2> </li>
+				<li>Departure Date : ${date.toDateString()} ${date.toLocaleTimeString()}</li>
 				<li>Departure City : ${dep_city}</li>
-				<li>Destination City : ${des_city} </li>
-				<li> Paid Amount : ${amt}</li>
+				<li>Destination City : ${des_city} </li>				
 				<li>Travellers : ${travellers}</li>
 				<li> Travelling Class : ${travel_class}</li>
+				<li> Payment Id :${paymentId} </li>
 			</ul>
 		</div>
 		<div>

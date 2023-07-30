@@ -29,27 +29,25 @@ export const addUser = async (req: Request, res: Response): Promise<void> => {
     };
     try {
       let seckey = process.env.SEC_KEY ?? "goibibo_Sec_key";
-      const token: string = jwt.sign(payload, seckey, {
-        expiresIn: "1h",
-      });
+      const token: string = jwt.sign(payload, seckey);
       let findRole = await roleModel.findOne({ role_id: roles.User }).exec();
       payload.role = findRole?._id;
 
       const newUser = new userModel(payload);
       await newUser.save();
 
-      let status = await sendMail(
-        req.body.email,
-        "Greetings from Goibibo",
-        welcomeGreetinghtml(req.body.user_name)
-      );
+      // let status = await sendMail(
+      //   req.body.email,
+      //   "Greetings from Goibibo",
+      //   welcomeGreetinghtml(req.body.user_name)
+      // );
       res.status(200).json({
         login: 1,
         newuser: 1,
         verfied: 1,
         message: "New user added & logged in",
         token: token,
-        mail: status,
+        mail: "",
       });
     } catch (e) {
       res.status(500).json({
@@ -174,7 +172,7 @@ export const generateOTP = async (
           email: email_id,
           date: date,
           expiryTime: expiryTime,
-          status: "Temp. mail server is down!",
+          status: "",
         });
       } else {
         res.status(200).json({
@@ -300,7 +298,7 @@ export const getMyTrips = async (req: Request, res: Response) => {
       select: "-_id flight_no",
       populate: {
         path: "airline_id",
-        select: "-_id -__v",
+        select: "-_id -__v -createdAt -updatedAt",
       },
     })
     .populate({
@@ -308,7 +306,7 @@ export const getMyTrips = async (req: Request, res: Response) => {
       select: "-_id flight_no",
       populate: {
         path: "airline_id",
-        select: "-_id -__v",
+        select: "-_id -__v -createdAt -updatedAt",
       },
     })
     .populate({

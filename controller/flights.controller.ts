@@ -37,6 +37,9 @@ export const scheduleFlight = async (req: Request, res: Response) => {
   const findAirlineDetails = await airlineModel
     .findById(findAirline?.airline_id)
     .exec();
+
+
+  
   const findRoute = await routeModel
     .findOne({ route_id: req.body.route_id })
     .exec();
@@ -46,6 +49,8 @@ export const scheduleFlight = async (req: Request, res: Response) => {
       airbus_code: req.body.airbus_code,
     })
     .exec();
+  
+  console.log(findAirbus)
 
   const ScheduleDate: Date = new Date(req.body.source_time);
 
@@ -101,7 +106,7 @@ export const scheduleFlight = async (req: Request, res: Response) => {
   const findAdminAirline = await airlineModel
     .findOne({ airline_code: process.env.ADMN_CODE ?? "ADMN" })
     .exec();
-  console.log(findRule);
+
   if (
     sourceTime < destinationTime &&
     findRoute &&
@@ -117,7 +122,7 @@ export const scheduleFlight = async (req: Request, res: Response) => {
     const FlightData: FlightBase = {
       flight_no: `${findAirlineDetails?.airline_code}-${
         findRoute.route_id?.split("-")[1]
-      }${findAirbus.airbus_code?.replaceAll("-", "")}`,
+      }${findAirbus.airbus_code?.toString().replace("-","")}`,
       airline_id: findAirlineDetails?._id ?? null,
       route_id: findRoute._id ?? null,
       airbus_id: findAirbus?._id ?? null,
@@ -125,6 +130,7 @@ export const scheduleFlight = async (req: Request, res: Response) => {
       status: FlightStatus.Schduleded,
       rule: findRule?._id ?? null,
     };
+    console.log(FlightData)
     try {
       await flightModel
         .updateOne(

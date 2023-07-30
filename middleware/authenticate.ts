@@ -12,8 +12,8 @@ export const authenticateUser = async (
     let seckey: string = process.env.SEC_KEY ?? "goibibo_Sec_key";
     let token: any = req.headers.token;
     let decode: JwtPayload = <JwtPayload>jwt.decode(token);
-
     const findrole = await roleModel.findById(decode.role).exec();
+    
     let verfied = jwt.verify(token, seckey);
     if (verfied && findrole?.role_id! >= role) {
       next();

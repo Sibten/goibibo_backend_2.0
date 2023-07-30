@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import { connectDB } from "./Service/ConnectDB.services";
 import { number, string } from "joi";
+import { kStringMaxLength } from "buffer";
 
 connectDB();
 
@@ -19,6 +20,9 @@ const BookingSchema = new mongoose.Schema({
     departure_flight: { type: mongoose.Types.ObjectId, ref: "flight" },
     return_flight: { type: mongoose.Types.ObjectId, ref: "flight" },
     peoples: [],
+    address: String,
+    pincode : Number,
+    state : String,
     infants: [
       {
         first_name: String,

@@ -139,6 +139,9 @@ export interface BookingData {
     source_city: mongoose.Types.ObjectId | null;
     departure_flight: mongoose.Types.ObjectId | null;
     return_flight: mongoose.Types.ObjectId | null;
+    address : string,
+    pincode : number,
+    state : string,
     peoples: Array<{
       type: number;
       first_name: string;

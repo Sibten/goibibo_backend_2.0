@@ -19,6 +19,7 @@ export const addRule = async (req: Request, res: Response) => {
         user_id: findUser?._id,
       })
       .exec();
+    console.log(findAirlineId)
     const rule: RuleBase = {
       airline_id:
         (findAirlineId?.airline_id as mongoose.Types.ObjectId) ?? null,
@@ -41,12 +42,13 @@ export const addRule = async (req: Request, res: Response) => {
         },
       ],
     };
+    console.log(rule)
 
     try {
       await ruleModel
         .updateOne(
-          { airline_id: findAirlineId },
-          { $set: { airline_id: rule.airline_id, luggage: rule.luggage } },
+          { airline_id: findAirlineId?.airline_id },
+          { $set: rule  },
           { upsert: true }
         )
         .exec();
