@@ -13,14 +13,14 @@ import { BookingStatus, Flightclass } from "../helper/enums";
 import { bookingModel } from "../model/booking.model";
 import { cityModel } from "../model/city.model";
 import { sendMail } from "../helper/sendMail.helper";
-import { booking } from "../view/booking.template";
+import { bookingTemplate } from "../view/booking.template";
 import { getFlightClass } from "../helper/Methods";
 env.config();
 
 export const createPaymentOrder = (req: Request, res: Response) => {
   const key_id = process.env.RZP_KEYID ?? "";
   const sec_key = process.env.RZP_KEYSEC ?? "";
-  
+
   const instance = new Razorpay({
     key_id: key_id,
     key_secret: sec_key,
@@ -31,7 +31,7 @@ export const createPaymentOrder = (req: Request, res: Response) => {
     currency: "INR",
   };
 
-  console.log(options)
+  console.log(options);
 
   try {
     instance.orders.create(options, (err, order) => {
@@ -95,6 +95,7 @@ const updateFlight = async (
     case Flightclass.Economy:
       seats.forEach((s) => {
         if (booked_seat?.EC.includes(s)) {
+          console.log("seat...");
           throw new Error("Seat already booked");
         }
       });
@@ -171,11 +172,9 @@ const findCity = async (code: string) => {
 };
 
 export const validatePayment = async (req: Request, res: Response) => {
-  console.log(req.body)
-  const session = mongoose.startSession();
+  // const session = await mongoose.startSession();
+  // session.startTransaction();
   try {
-    (await session).startTransaction();
-
     const sec_key = process.env.RZP_KEYSEC ?? "";
 
     const order_id = req.body.rzpinfo.razorpay_order_id;
@@ -187,6 +186,7 @@ export const validatePayment = async (req: Request, res: Response) => {
       .digest("hex");
 
     if (hash === signature) {
+      console.log("verified");
       const IncomingData = {
         dep_flight_no: req.body.dep_flight_no,
         rtn_flight_no: req.body.rtn_flight_no ?? null,
@@ -222,6 +222,8 @@ export const validatePayment = async (req: Request, res: Response) => {
         IncomingData.travel_class
       );
 
+      console.log(dep_flight);
+
       let rtn_flight = null;
       if (IncomingData.rtn_flight_no && IncomingData.return_date) {
         rtn_flight = await updateFlight(
@@ -254,9 +256,9 @@ export const validatePayment = async (req: Request, res: Response) => {
           return_flight: rtn_flight,
           peoples: [...req.body.peoples],
           infants: req.body.infants,
-          address : req.body.address,
-          state : req.body.state,
-          pincode : parseInt(req.body.pincode),
+          address: req.body.address,
+          state: req.body.state,
+          pincode: parseInt(req.body.pincode),
         },
         addons: {
           departure_addons: req.body.addons.departure_addons,
@@ -267,40 +269,44 @@ export const validatePayment = async (req: Request, res: Response) => {
 
       const newBooking = new bookingModel(bookingData);
       await newBooking.save();
-      
-      const temp = booking(
+
+      const temp = bookingTemplate(
         bookingData.jouerny_info.peoples[0].first_name,
         bookingData.PNR_no,
         bookingData.jouerny_info.departure_date,
         IncomingData.source_city_code,
-        IncomingData.destn_city_code,    
-        (bookingData.jouerny_info.peoples.length + bookingData.jouerny_info.infants.length),
+        IncomingData.destn_city_code,
+        bookingData.jouerny_info.peoples.length +
+          bookingData.jouerny_info.infants.length,
         getFlightClass(bookingData.class_type),
-        data.razor_pay_id,
+        data.razor_pay_id
       );
-      console.log(temp);
-      console.log(bookingData.ticket_email)
-      const status = await sendMail(
-        bookingData.ticket_email,
-        "Goibibo Booking Confirmation",
-        temp
-      )
-      
+      console.log(bookingData.ticket_email);
+
+      // const status = await sendMail(
+      //   bookingData.ticket_email,
+      //   "Goibibo Booking Confirmation",
+      //   temp
+      // );
+
       res.status(200).json({
         payment: 1,
-        message: "Payment Succesful and Booking Confirmed!",   
-        status : status, 
+        message: "Payment Succesful and Booking Confirmed!",
+        // status: status,
       });
     } else {
       throw new Error("Invalid Transaction");
     }
-
-    (await session).commitTransaction();
+    // session.commitTransaction();
   } catch (e) {
+    // session.abortTransaction();
     res
       .status(400)
       .json({ payment: 0, message: "Something bad happen!", error: e });
   }
+  // finally {
+  //   session.endSession();
+  // }
 };
 
 export const getMyPayments = async (req: Request, res: Response) => {

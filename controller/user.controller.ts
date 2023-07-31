@@ -169,6 +169,7 @@ export const generateOTP = async (
       if (findMail) {
         res.status(200).json({
           found: 1,
+          otp: OTP,
           email: email_id,
           date: date,
           expiryTime: expiryTime,
@@ -178,6 +179,7 @@ export const generateOTP = async (
         res.status(200).json({
           found: 0,
           email: email_id,
+          otp: OTP,
           date: date,
           expiryTime: expiryTime,
           status: "Temp. mail server is down!",

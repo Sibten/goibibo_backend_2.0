@@ -1,6 +1,6 @@
-export const booking = (
-	name : string,
-	pnr : number,
+export const bookingTemplate = (
+  name: string,
+  pnr: number,
   date: Date,
   dep_city: string,
   des_city: string,
@@ -83,7 +83,9 @@ export const booking = (
 			<h3> Ticket Details</h3>
 			<ul>
 	  			<li>PNR Number <h2>${pnr} </h2> </li>
-				<li>Departure Date : ${date.toDateString()} ${date.toLocaleTimeString()}</li>
+				<li>Departure Date : ${new Date(date).toDateString()} ${new Date(
+    date
+  ).toLocaleTimeString()}</li>
 				<li>Departure City : ${dep_city}</li>
 				<li>Destination City : ${des_city} </li>				
 				<li>Travellers : ${travellers}</li>
