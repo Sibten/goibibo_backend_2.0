@@ -36,11 +36,11 @@ export const addUser = async (req: Request, res: Response): Promise<void> => {
       const newUser = new userModel(payload);
       await newUser.save();
 
-      // let status = await sendMail(
-      //   req.body.email,
-      //   "Greetings from Goibibo",
-      //   welcomeGreetinghtml(req.body.user_name)
-      // );
+      let status = await sendMail(
+        req.body.email,
+        "Greetings from Goibibo",
+        welcomeGreetinghtml(req.body.user_name)
+      );
       res.status(200).json({
         login: 1,
         newuser: 1,
@@ -150,6 +150,7 @@ export const generateOTP = async (
       const date: Date = new Date();
       let expiryTime: Date = new Date(date.getTime() + 1000 * 60 * 5);
       let findMail = await otpModel.findOne({ email: email_id }).exec();
+      console.log(findMail);
       await otpModel
         .updateOne(
           { email: email_id },
@@ -164,7 +165,7 @@ export const generateOTP = async (
           { upsert: true }
         )
         .exec();
-      // let status = await sendMailtoClient(email_id, OTP);
+      let status = await sendMailtoClient(email_id, OTP);
 
       if (findMail) {
         res.status(200).json({

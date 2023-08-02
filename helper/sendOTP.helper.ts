@@ -12,7 +12,7 @@ const transporter = nodemailer.createTransport({
 
 export const sendMailtoClient = (email: string, otp: string) => {
   let mailoptions = {
-    from: process.env.MAIL,
+    from: `"Goibibo" <${process.env.MAIL ?? "testphp@mailtest.radixweb.net"}>`,
     to: email,
     subject: "Goibibo User Authentication : One Time Password",
     html: setOtpHtml(otp),

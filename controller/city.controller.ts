@@ -11,6 +11,8 @@ export const addCities = async (req: Request, res: Response) => {
 };
 
 export const getCities = async (req: Request, res: Response) => {
-  let data = await cityModel.find({}, { _id: 0, __v: 0 }).exec();
+  let data = await cityModel
+    .find({ country_name: "India" }, { _id: 0, __v: 0 })
+    .exec();
   res.status(200).send(data);
 };
