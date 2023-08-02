@@ -41,6 +41,8 @@ import { FlightStatus, Flightclass } from "../helper/enums";
 
    let data: Object;
 
+   console.log(date, date2);
+
    try {
      switch (parseInt(req.query.class?.toString()!)) {
        case Flightclass.Business:
