@@ -283,16 +283,16 @@ export const validatePayment = async (req: Request, res: Response) => {
       );
       console.log(bookingData.ticket_email);
 
-      // const status = await sendMail(
-      //   bookingData.ticket_email,
-      //   "Goibibo Booking Confirmation",
-      //   temp
-      // );
+      const status = await sendMail(
+        bookingData.ticket_email,
+        "Goibibo Booking Confirmation",
+        temp
+      );
 
       res.status(200).json({
         payment: 1,
         message: "Payment Succesful and Booking Confirmed!",
-        // status: status,
+        status: status,
       });
     } else {
       throw new Error("Invalid Transaction");

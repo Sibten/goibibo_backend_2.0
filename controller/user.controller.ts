@@ -36,18 +36,18 @@ export const addUser = async (req: Request, res: Response): Promise<void> => {
       const newUser = new userModel(payload);
       await newUser.save();
 
-      // let status = await sendMail(
-      //   req.body.email,
-      //   "Greetings from Goibibo",
-      //   welcomeGreetinghtml(req.body.user_name)
-      // );
+      let status = await sendMail(
+        req.body.email,
+        "Greetings from Goibibo",
+        welcomeGreetinghtml(req.body.user_name)
+      );
       res.status(200).json({
         login: 1,
         newuser: 1,
         verfied: 1,
         message: "New user added & logged in",
         token: token,
-        mail: "",
+        status: status,
       });
     } catch (e) {
       res.status(500).json({
@@ -164,7 +164,7 @@ export const generateOTP = async (
           { upsert: true }
         )
         .exec();
-      // let status = await sendMailtoClient(email_id, OTP);
+      let status = await sendMailtoClient(email_id, OTP);
 
       if (findMail) {
         res.status(200).json({
@@ -173,7 +173,7 @@ export const generateOTP = async (
           email: email_id,
           date: date,
           expiryTime: expiryTime,
-          status: "",
+          status: status,
         });
       } else {
         res.status(200).json({
@@ -182,7 +182,7 @@ export const generateOTP = async (
           otp: OTP,
           date: date,
           expiryTime: expiryTime,
-          status: "Temp. mail server is down!",
+          status: status,
         });
       }
     } catch (e) {
