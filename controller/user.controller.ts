@@ -150,6 +150,7 @@ export const generateOTP = async (
       const date: Date = new Date();
       let expiryTime: Date = new Date(date.getTime() + 1000 * 60 * 5);
       let findMail = await otpModel.findOne({ email: email_id }).exec();
+      console.log(findMail);
       await otpModel
         .updateOne(
           { email: email_id },
