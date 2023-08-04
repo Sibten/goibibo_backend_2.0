@@ -22,30 +22,34 @@ export const addFare = async (req: Request, res: Response) => {
   const fareData: FareBase = {
     airline_id: (findAirlineId?.airline_id as mongoose.Types.ObjectId) ?? null,
     fare: [
-      { class_type: Flightclass.Economy, basic_fare: req.body.EC_fare },
-      { class_type: Flightclass.PremiumEconomy, basic_fare: req.body.PE_fare },
-      { class_type: Flightclass.Business, basic_fare: req.body.BC_fare },
-      { class_type: Flightclass.FirstClass, basic_fare: req.body.FC_fare },
+      { class_type: Flightclass.Economy, basic_fare: req.body.EC_fare ?? 0 },
+      {
+        class_type: Flightclass.PremiumEconomy,
+        basic_fare: req.body.PE_fare ?? 0,
+      },
+      { class_type: Flightclass.Business, basic_fare: req.body.BC_fare ?? 0 },
+      { class_type: Flightclass.FirstClass, basic_fare: req.body.FC_fare ?? 0 },
     ],
     tax: req.body.tax,
   };
-  console.log(fareData)
-  try {
-    const data = await fareModel
-      .updateOne(
-        { airline_id: fareData.airline_id },
-        {
-          $set: {
-            airline_id: fareData.airline_id,
-            fare: fareData.fare,
-            tax: fareData.tax,
-          },
-        },
-        { upsert: true }
-      )
-      .exec();
 
-    res.status(200).json({ add: 1, message: "fare added!", data: data });
+  try {
+    if (fareData.tax > 0) {
+      const data = await fareModel
+        .updateOne(
+          { airline_id: fareData.airline_id },
+          {
+            $set: {
+              airline_id: fareData.airline_id,
+              fare: fareData.fare,
+              tax: fareData.tax,
+            },
+          },
+          { upsert: true }
+        )
+        .exec();
+      res.status(200).json({ add: 1, message: "fare added!", data: data });
+    } else throw new Error("Tax can't be empty!");
   } catch (e) {
     res.status(400).json({ add: 0, message: "error", error: e });
   }

@@ -92,15 +92,19 @@ export const addRoute = async (req: Request, res: Response) => {
       stops: stops,
     };
 
-    const newRoute = await routeModel
-      .updateOne(
-        { route_id: routeData.route_id },
-        { $set: routeData },
-        { upsert: true }
-      )
-      .exec();
+    try {
+      const newRoute = await routeModel
+        .updateOne(
+          { route_id: routeData.route_id },
+          { $set: routeData },
+          { upsert: true }
+        )
+        .exec();
+      res.status(200).json({ add: 1, message: "Route Added!", data: newRoute });
+    } catch (e) {
+      res.status(400).json({ add: 0, error: 1, error_desc: e });
+    }
 
-    res.status(200).json({ add: 1, message: "Route Added!", data: newRoute });
   } else {
     res.status(400).json({ add: 0, error: 1, error_desc: valid["error"] });
   }

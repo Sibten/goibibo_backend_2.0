@@ -13,9 +13,15 @@ export const createOffer = async (req: Request, res: Response) => {
   };
 
   try {
-    const newOffer = new offerModel(offerData);
-    await newOffer.save();
-    res.status(200).json({ add: 1, message: "offer created!" });
+    if (
+      offerData.offer_name != "" &&
+      offerData.referal_code != "" &&
+      offerData.offer_discount != 0
+    ) {
+      const newOffer = new offerModel(offerData);
+      await newOffer.save();
+      res.status(200).json({ add: 1, message: "offer created!" });
+    } else throw new Error("Provide required details!");
   } catch (e) {
     res.status(400).json({ add: 0, message: "Error", error: e });
   }

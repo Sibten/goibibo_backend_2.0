@@ -22,8 +22,12 @@ export const scheduleFlight = async (req: Request, res: Response) => {
   let sourceTime = req.body.source_time;
   let destinationTime = req.body.destination_time;
 
-  sourceTime = new Date(sourceTime);
-  destinationTime = new Date(destinationTime);
+  try {
+    sourceTime = new Date(sourceTime);
+    destinationTime = new Date(destinationTime);
+  } catch (e) {
+    res.status(400).json({ error: 1, message: "Bad date request!" });
+  }
   const token: any = req.headers.token;
   const decode: JwtPayload = <JwtPayload>jwt.decode(token);
 
@@ -33,13 +37,10 @@ export const scheduleFlight = async (req: Request, res: Response) => {
     .findOne({ user_id: findUser?._id })
     .exec();
 
-
   const findAirlineDetails = await airlineModel
     .findById(findAirline?.airline_id)
     .exec();
 
-
-  
   const findRoute = await routeModel
     .findOne({ route_id: req.body.route_id })
     .exec();
@@ -49,8 +50,8 @@ export const scheduleFlight = async (req: Request, res: Response) => {
       airbus_code: req.body.airbus_code,
     })
     .exec();
-  
-  console.log(findAirbus)
+
+  // console.log(findAirbus)
 
   const ScheduleDate: Date = new Date(req.body.source_time);
 
@@ -122,7 +123,7 @@ export const scheduleFlight = async (req: Request, res: Response) => {
     const FlightData: FlightBase = {
       flight_no: `${findAirlineDetails?.airline_code}-${
         findRoute.route_id?.split("-")[1]
-      }${findAirbus.airbus_code?.toString().replace("-","")}`,
+      }${findAirbus.airbus_code?.toString().replace("-", "")}`,
       airline_id: findAirlineDetails?._id ?? null,
       route_id: findRoute._id ?? null,
       airbus_id: findAirbus?._id ?? null,
@@ -130,7 +131,7 @@ export const scheduleFlight = async (req: Request, res: Response) => {
       status: FlightStatus.Schduleded,
       rule: findRule?._id ?? null,
     };
-    console.log(FlightData)
+    console.log(FlightData);
     try {
       await flightModel
         .updateOne(

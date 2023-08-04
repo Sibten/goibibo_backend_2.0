@@ -19,36 +19,36 @@ export const addRule = async (req: Request, res: Response) => {
         user_id: findUser?._id,
       })
       .exec();
-    console.log(findAirlineId)
+    console.log(findAirlineId);
     const rule: RuleBase = {
       airline_id:
         (findAirlineId?.airline_id as mongoose.Types.ObjectId) ?? null,
       luggage: [
         {
           type: Flightclass.Economy,
-          limit: req.body.EC,
+          limit: req.body.EC ?? 0,
         },
         {
           type: Flightclass.PremiumEconomy,
-          limit: req.body.PE,
+          limit: req.body.PE ?? 0,
         },
         {
           type: Flightclass.Business,
-          limit: req.body.BC,
+          limit: req.body.BC ?? 0,
         },
         {
           type: Flightclass.FirstClass,
-          limit: req.body.FC,
+          limit: req.body.FC ?? 0,
         },
       ],
     };
-    console.log(rule)
+    // console.log(rule)
 
     try {
       await ruleModel
         .updateOne(
           { airline_id: findAirlineId?.airline_id },
-          { $set: rule  },
+          { $set: rule },
           { upsert: true }
         )
         .exec();
