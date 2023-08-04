@@ -21,7 +21,7 @@ export const getAirlines = async (req: Request, res: Response) => {
 
 export const getMyAirlinesDetails = async (req: Request, res: Response) => {
   try {
-    let token: any = req.headers.token;
+    let token: any = req.cookies.token;
 
     let decode: JwtPayload = <JwtPayload>jwt.decode(token);
     let findUser = await userModel.findOne({ email: decode.email }).exec();
@@ -88,7 +88,7 @@ export const updateAirline = async (req: Request, res: Response) => {
   let valid = validateAirline(req.body);
   if (!valid["error"]) {
     try {
-      let token: any = req.headers.token;
+      let token: any = req.cookies.token;
 
       let decode: JwtPayload = <JwtPayload>jwt.decode(token);
       let findUser = await userModel.findOne({ email: decode.email }).exec();
@@ -154,7 +154,7 @@ export const updateIcon = async (req: Request, res: Response) => {
 
     let url = await uploadImage(fileParams);
     if (url) {
-      let token: any = req.headers.token;
+      let token: any = req.cookies.token;
 
       let decode: JwtPayload = <JwtPayload>jwt.decode(token);
       let findUser = await userModel.findOne({ email: decode.email }).exec();

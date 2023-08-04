@@ -28,7 +28,7 @@ export const scheduleFlight = async (req: Request, res: Response) => {
   } catch (e) {
     res.status(400).json({ error: 1, message: "Bad date request!" });
   }
-  const token: any = req.headers.token;
+  const token: any = req.cookies.token;
   const decode: JwtPayload = <JwtPayload>jwt.decode(token);
 
   const findUser = await userModel.findOne({ email: decode.email }).exec();
@@ -203,7 +203,7 @@ export const getFlightDetails = async (req: Request, res: Response) => {
 };
 
 export const getMyAirlineFlights = async (req: Request, res: Response) => {
-  let token: any = req.headers.token;
+  let token: any = req.cookies.token;
   let decode: JwtPayload = <JwtPayload>jwt.decode(token);
   let findUser = await userModel.findOne({ email: decode.email }).exec();
 

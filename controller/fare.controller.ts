@@ -9,7 +9,7 @@ import { fareModel } from "../model/fare.model";
 import mongoose from "mongoose";
 
 export const addFare = async (req: Request, res: Response) => {
-  let token: any = req.headers.token;
+  let token: any = req.cookies.token;
 
   let decode: JwtPayload = <JwtPayload>jwt.decode(token);
   let findUser = await userModel.findOne({ email: decode.email }).exec();
@@ -56,7 +56,7 @@ export const addFare = async (req: Request, res: Response) => {
 };
 
 export const getMyAirlineFare = async (req: Request, res: Response) => {
-  let token: any = req.headers.token;
+  let token: any = req.cookies.token;
 
   let decode: JwtPayload = <JwtPayload>jwt.decode(token);
   let findUser = await userModel.findOne({ email: decode.email }).exec();

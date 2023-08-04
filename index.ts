@@ -13,13 +13,22 @@ import { searchRouter } from "./router/search.router";
 import { offerRouter } from "./router/offer.router";
 import { addOnRouter } from "./router/addon.router";
 import { paymentRouter } from "./router/payment.router";
+import cookieParser from "cookie-parser";
+import { authenticateUser } from "./middleware/authenticate";
+import { roles } from "./helper/enums";
 
 const app = express();
 env.config();
 
 const port = process.env.PORT ?? 5050;
-app.use(cors());
+app.use(
+  cors({
+    credentials: true,
+    origin: ["http://localhost:3000", "http://192.168.102.29:3000"],
+  })
+);
 app.use(fileupload());
+app.use(cookieParser());
 app.use(express.json());
 
 app.use("/user", userRouter);

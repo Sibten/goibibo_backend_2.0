@@ -165,7 +165,7 @@ export const generateOTP = async (
           { upsert: true }
         )
         .exec();
-      let status = await sendMailtoClient(email_id, OTP);
+      // let status = await sendMailtoClient(email_id, OTP);
 
       if (findMail) {
         res.status(200).json({
@@ -174,7 +174,7 @@ export const generateOTP = async (
           email: email_id,
           date: date,
           expiryTime: expiryTime,
-          status: status,
+          // status: status,
         });
       } else {
         res.status(200).json({
@@ -183,7 +183,7 @@ export const generateOTP = async (
           otp: OTP,
           date: date,
           expiryTime: expiryTime,
-          status: status,
+          // status: status,
         });
       }
     } catch (e) {
@@ -205,10 +205,10 @@ export const validateOTP = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  const mobileNo = req.body.email;
+  const email = req.body.email;
   const OTP = req.body.otp;
-  let findOTP = await otpModel.findOne({ email: mobileNo }).exec();
-  let findUser = await userModel.findOne({ email: mobileNo }).exec();
+  let findOTP = await otpModel.findOne({ email: email }).exec();
+  let findUser = await userModel.findOne({ email: email }).exec();
   const date = new Date();
   if (findOTP) {
     if (OTP == findOTP?.otp && !findUser && date <= findOTP?.expriy_time!) {
@@ -221,11 +221,13 @@ export const validateOTP = async (
       let payload = { email: findUser.email, role: findUser.role };
       let seckey = process.env.SEC_KEY ?? "goibibo_Sec_key";
       const token = jwt.sign(payload, seckey);
+      console.log(token);
+      res.cookie("email", email);
+      res.cookie("token", token);
       res.status(200).json({
         login: 1,
         verfied: 1,
         message: "login sucess",
-        token: token,
       });
     } else {
       res.status(200).json({
@@ -288,7 +290,7 @@ export const getUserDetails = async (req: Request, res: Response) => {
 };
 
 export const getMyTrips = async (req: Request, res: Response) => {
-  const token: any = req.headers.token;
+  const token: any = req.cookies.token;
   const decode: JwtPayload = <JwtPayload>jwt.decode(token);
   const findUser = await userModel.findOne({ email: decode.email }).exec();
 

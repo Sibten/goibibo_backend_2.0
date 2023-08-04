@@ -52,7 +52,7 @@ const findCity = async (code: string) => {
 };
 
 export const addRoute = async (req: Request, res: Response) => {
-  let token: any = req.headers.token;
+  let token: any = req.cookies.token;
 
   let decode: JwtPayload = <JwtPayload>jwt.decode(token);
   let findUser = await userModel.findOne({ email: decode.email }).exec();
@@ -104,14 +104,13 @@ export const addRoute = async (req: Request, res: Response) => {
     } catch (e) {
       res.status(400).json({ add: 0, error: 1, error_desc: e });
     }
-
   } else {
     res.status(400).json({ add: 0, error: 1, error_desc: valid["error"] });
   }
 };
 
 export const getRouteDetails = async (req: Request, res: Response) => {
-  let token: any = req.headers.token;
+  let token: any = req.cookies.token;
 
   let decode: JwtPayload = <JwtPayload>jwt.decode(token);
   let findUser = await userModel.findOne({ email: decode.email }).exec();
@@ -135,7 +134,7 @@ export const getRouteDetails = async (req: Request, res: Response) => {
       },
       { __v: 0, createdAt: 0, updatedAt: 0, _id: 0 }
     )
-    .populate({path : "added_by", select : "-_id -__v -createdAt -updatedAt"})
+    .populate({ path: "added_by", select: "-_id -__v -createdAt -updatedAt" })
     .populate({ path: "source_city", select: "-_id -__v" })
     .populate({ path: "destination_city", select: "-_id -__v" })
     .populate({ path: "stops", select: "-_id -__v" })

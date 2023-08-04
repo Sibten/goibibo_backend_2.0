@@ -10,17 +10,17 @@ export const authenticateUser = async (
 ) => {
   try {
     let seckey: string = process.env.SEC_KEY ?? "goibibo_Sec_key";
-    let token: any = req.headers.token;
+    let token: any = req.cookies.token;
     let decode: JwtPayload = <JwtPayload>jwt.decode(token);
     const findrole = await roleModel.findById(decode.role).exec();
-    
+    console.log(token);
     let verfied = jwt.verify(token, seckey);
     if (verfied && findrole?.role_id! >= role) {
       next();
     } else {
       res.status(401).json({ error: 1, message: "unauthorized access!" });
     }
-  } catch (e) {
-    res.status(400).json({ error: 1, error_desc: e });
+  } catch (e:any) {
+    res.status(400).json({ error: 1, error_desc: e.message });
   }
 };

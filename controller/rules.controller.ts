@@ -8,7 +8,7 @@ import { ruleModel } from "../model/rules.model";
 import mongoose from "mongoose";
 
 export const addRule = async (req: Request, res: Response) => {
-  let token: any = req.headers.token;
+  let token: any = req.cookies.token;
 
   let decode: JwtPayload = <JwtPayload>jwt.decode(token);
   let findUser = await userModel.findOne({ email: decode.email }).exec();
@@ -62,7 +62,7 @@ export const addRule = async (req: Request, res: Response) => {
 };
 
 export const getRules = async (req: Request, res: Response) => {
-  let token: any = req.headers.token;
+  let token: any = req.cookies.token;
 
   let decode: JwtPayload = <JwtPayload>jwt.decode(token);
   let findUser = await userModel.findOne({ email: decode.email }).exec();

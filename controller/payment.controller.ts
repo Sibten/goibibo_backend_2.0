@@ -201,7 +201,7 @@ export const validatePayment = async (req: Request, res: Response) => {
         source_city_code: req.body.source_city_code,
       };
 
-      const token: any = req.headers.token;
+      const token: any = req.cookies.token;
 
       const decode: JwtPayload = <JwtPayload>jwt.decode(token);
       const findUser = await userModel.findOne({ email: decode.email }).exec();
@@ -310,7 +310,7 @@ export const validatePayment = async (req: Request, res: Response) => {
 };
 
 export const getMyPayments = async (req: Request, res: Response) => {
-  const token: any = req.headers.token;
+  const token: any = req.cookies.token;
   const decode: JwtPayload = <JwtPayload>jwt.decode(token);
   const findUser = await userModel.findOne({ email: decode.email }).exec();
 
