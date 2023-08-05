@@ -9,6 +9,7 @@ import {
   getUserDetails,
   uploadProfilePhoto,
   getMyTrips,
+  logout,
 } from "../controller/user.controller";
 import { roles } from "../helper/enums";
 import {
@@ -29,7 +30,7 @@ userRouter.post("/updateprofile/uploadphoto", uploadProfilePhoto);
 userRouter.post("/login", loginViaCredential);
 userRouter.get("/mydetails", getUserDetails);
 userRouter.get("/my_trips", getMyTrips);
-
+userRouter.get("/logout", logout);
 userRouter.use((req, res, next) =>
   authenticateUser(req, res, next, roles.SuperAdmin)
 );

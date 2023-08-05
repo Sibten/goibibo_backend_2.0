@@ -228,6 +228,7 @@ export const validateOTP = async (
         login: 1,
         verfied: 1,
         message: "login sucess",
+        token: token,
       });
     } else {
       res.status(200).json({
@@ -326,7 +327,11 @@ export const getMyTrips = async (req: Request, res: Response) => {
 };
 
 export const logout = (req: Request, res: Response) => {
-  res.cookie("email", "");
-  res.cookie("token", "");
-  res.status(200);
+  try {
+    res.clearCookie("email");
+    res.clearCookie("token");
+    res.status(200).json({ logout: 1, message: "logout" });
+  } catch (e) {
+    res.status(400);
+  }
 };
