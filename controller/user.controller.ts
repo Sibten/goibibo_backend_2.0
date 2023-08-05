@@ -289,6 +289,8 @@ export const getUserDetails = async (req: Request, res: Response) => {
   res.status(200).json(findUser);
 };
 
+
+
 export const getMyTrips = async (req: Request, res: Response) => {
   const token: any = req.cookies.token;
   const decode: JwtPayload = <JwtPayload>jwt.decode(token);
@@ -321,4 +323,10 @@ export const getMyTrips = async (req: Request, res: Response) => {
     .exec();
 
   res.status(200).send(bookingData);
+};
+
+export const logout = (req: Request, res: Response) => {
+  res.cookie("email", "");
+  res.cookie("token", "");
+  res.status(200);
 };
