@@ -1,8 +1,8 @@
 import mongoose from "mongoose";
-import { connectDB } from "./Service/ConnectDB.services";
+
 import { number } from "joi";
 
-connectDB();
+
 
 const addOnSchema = new mongoose.Schema({
   type: Number,

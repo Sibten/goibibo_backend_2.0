@@ -1,8 +1,4 @@
-import { string } from "joi";
-import { connectDB } from "./Service/ConnectDB.services";
 import mongoose from "mongoose";
-
-connectDB();
 
 const offerSchema = new mongoose.Schema(
   {

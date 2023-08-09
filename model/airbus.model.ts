@@ -1,7 +1,4 @@
 import mongoose from "mongoose";
-import { connectDB } from "./Service/ConnectDB.services";
-
-connectDB();
 
 const airbusSchema = new mongoose.Schema(
   {

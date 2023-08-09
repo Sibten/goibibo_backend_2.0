@@ -1,8 +1,8 @@
 import mongoose from "mongoose";
 
-import { connectDB } from "./Service/ConnectDB.services";
 
-connectDB();
+
+
 const routeSchema = new mongoose.Schema(
   {
     route_id: String,

@@ -1,9 +1,9 @@
 import mongoose from "mongoose";
-import { connectDB } from "./Service/ConnectDB.services";
+
 import { number, string } from "joi";
 import { kStringMaxLength } from "buffer";
 
-connectDB();
+
 
 const BookingSchema = new mongoose.Schema({
   booking_stamp: Date,

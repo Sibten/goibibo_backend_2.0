@@ -1,9 +1,6 @@
 import mongoose from "mongoose";
 
-mongoose
-  .connect("mongodb://localhost:27017/goibibo")
-  .then((d) => console.log("goibibo connected"))
-  .catch((e) => console.log(e));
+
 
 const otpSchema = new mongoose.Schema(
   {

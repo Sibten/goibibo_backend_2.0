@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
-import { connectDB } from "./Service/ConnectDB.services";
 
-connectDB();
+
+
 
 const airadminSchema = new mongoose.Schema(
   {
