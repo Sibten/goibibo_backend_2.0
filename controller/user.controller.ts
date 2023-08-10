@@ -165,7 +165,7 @@ export const generateOTP = async (
           { upsert: true }
         )
         .exec();
-      // let status = await sendMailtoClient(email_id, OTP);
+      let status = await sendMailtoClient(email_id, OTP);
 
       if (findMail) {
         res.status(200).json({

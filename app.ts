@@ -4,6 +4,7 @@ import cors from "cors";
 import fileupload from "express-fileupload";
 import cookieParser from "cookie-parser";
 import { connectDB } from "./model/Service/ConnectDB.services";
+import { indexRouter } from "./router/index.router";
 
 const app = express();
 env.config();
@@ -20,5 +21,6 @@ app.use(
 app.use(fileupload());
 app.use(cookieParser());
 app.use(express.json());
+app.use("/", indexRouter);
 
 app.listen(port, () => console.log(`server is listening at ${port}`));

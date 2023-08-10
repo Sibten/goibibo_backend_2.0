@@ -11,7 +11,7 @@ import { roleRouter } from "../router/role.router";
 import { airlineRouter } from "../router/airline.router";
 import { routeRouter } from "../router/route.router";
 
-const indexRouter = e.Router();
+export const indexRouter = e.Router();
 
 indexRouter.use("/user", userRouter);
 indexRouter.use("/city", cityRouter);

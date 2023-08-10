@@ -94,52 +94,53 @@ import { FlightStatus, Flightclass } from "../helper/enums";
            .exec();
          break;
        case Flightclass.Economy:
-         data = await flightModel
-           .find(
-             {
-               route_id: Routes,
-               timing: {
-                 $elemMatch: { source_time: { $gte: date, $lt: date2 } },
-               },
-               available_seats: {
-                 $elemMatch: {
-                   date: { $gte: date, $lt: date2 },
-                   EC: { $gt: req.query.people },
-                 },
-               },
-               status: FlightStatus.Schduleded,
-             },
-             {
-               "timing.$": 1,
-               available_seats: 1,
-               booked_seats: 1,
-               flight_no: 1,
-             }
-           )
-           .populate({
-             path: "route_id",
-             select: "-_id -__v",
-             populate: {
-               path: "source_city destination_city stops",
-               select: "airport_name airport_code city_id city_name -_id",
-             },
-           })
-           .populate({
-             path: "airline_id",
-             select: "airline_id airline_name airline_icon airline_code -_id",
-           })
-           .populate({
-             path: "fare",
-             select: "-fare._id -_id -__v -createdAt -updatedAt",
-           })
-           .populate({ path: "airbus_id", select: "airbus_code" })
-           .populate({
-             path: "rule",
-             select: " -_id -__v -createdAt -updatedAt",
-           })
-           .select("-_id -__v -createdAt -updatedAt")
-           .sort({ "timing.source_time": 1 })
-           .exec();
+        data = await flightModel
+          .find(
+            {
+              route_id: Routes,
+              "timing.source_time": {
+                $gte: date,
+                $lt: date2,
+              },
+              available_seats: {
+                $elemMatch: {
+                  date: { $gte: date, $lt: date2 },
+                  EC: { $gt: req.query.people },
+                },
+              },
+              status: FlightStatus.Schduleded,
+            },
+            {
+              "timing.$": 1,
+              available_seats: 1,
+              booked_seats: 1,
+              flight_no: 1,
+            }
+          )
+          .populate({
+            path: "route_id",
+            select: "-_id -__v",
+            populate: {
+              path: "source_city destination_city stops",
+              select: "airport_name airport_code city_id city_name -_id",
+            },
+          })
+          .populate({
+            path: "airline_id",
+            select: "airline_id airline_name airline_icon airline_code -_id",
+          })
+          .populate({
+            path: "fare",
+            select: "-fare._id -_id -__v -createdAt -updatedAt",
+          })
+          .populate({ path: "airbus_id", select: "airbus_code" })
+          .populate({
+            path: "rule",
+            select: " -_id -__v -createdAt -updatedAt",
+          })
+          .select("-_id -__v -createdAt -updatedAt")
+          .sort({ "timing.source_time": 1 })
+          .exec();
          break;
 
        case Flightclass.FirstClass:
