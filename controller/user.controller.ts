@@ -165,7 +165,7 @@ export const generateOTP = async (
           { upsert: true }
         )
         .exec();
-      let status = await sendMailtoClient(email_id, OTP);
+      // let status = await sendMailtoClient(email_id, OTP);
 
       if (findMail) {
         res.status(200).json({
@@ -289,8 +289,6 @@ export const getUserDetails = async (req: Request, res: Response) => {
     .exec();
   res.status(200).json(findUser);
 };
-
-
 
 export const getMyTrips = async (req: Request, res: Response) => {
   const token: any = req.cookies.token;

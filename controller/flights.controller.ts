@@ -108,6 +108,8 @@ export const scheduleFlight = async (req: Request, res: Response) => {
     .findOne({ airline_code: process.env.ADMN_CODE ?? "ADMN" })
     .exec();
 
+  console.log(findAirlineDetails, findRoute);
+
   if (
     sourceTime < destinationTime &&
     findRoute &&
@@ -274,19 +276,19 @@ export const addBookedSeat = async (req: Request, res: Response) => {
         });
 
         await flightModel
-        .findOneAndUpdate(
-          {
-            flight_no: req.body.flight_no,
-            "booked_seats.date": req.body.travel_date,
-          },
-          {
-            $set: {
-              "available_seats.$.BC": avaliable_seat?.BC! - seats.length,
+          .findOneAndUpdate(
+            {
+              flight_no: req.body.flight_no,
+              "booked_seats.date": req.body.travel_date,
             },
-            $push: { "booked_seats.$.BC": { $each: seats } },
-          }
-        )
-        .exec();
+            {
+              $set: {
+                "available_seats.$.BC": avaliable_seat?.BC! - seats.length,
+              },
+              $push: { "booked_seats.$.BC": { $each: seats } },
+            }
+          )
+          .exec();
 
         break;
       case Flightclass.Economy:
