@@ -2,19 +2,17 @@ import { Request, Response } from "express";
 import { FareBase } from "../helper/interfaces";
 
 import { airlineAdminModel } from "../model/airline_admin.model";
-import { userModel } from "../model/user.model";
-import jwt, { JwtPayload } from "jsonwebtoken";
+
 import { Flightclass } from "../helper/enums";
 import { fareModel } from "../model/fare.model";
 import mongoose from "mongoose";
+import { decodeJWT } from "../helper/decodeJWT";
 
 export const addFare = async (req: Request, res: Response) => {
-  let token: any = req.cookies.token;
-
-  let decode: JwtPayload = <JwtPayload>jwt.decode(token);
-  let findUser = await userModel.findOne({ email: decode.email }).exec();
+  let findUser = await decodeJWT(req);
 
   const findAirlineId = await airlineAdminModel
+
     .findOne({
       user_id: findUser?._id,
     })
@@ -56,10 +54,7 @@ export const addFare = async (req: Request, res: Response) => {
 };
 
 export const getMyAirlineFare = async (req: Request, res: Response) => {
-  let token: any = req.cookies.token;
-
-  let decode: JwtPayload = <JwtPayload>jwt.decode(token);
-  let findUser = await userModel.findOne({ email: decode.email }).exec();
+  let findUser = await decodeJWT(req);
   const findAirlineId = await airlineAdminModel
     .findOne({
       user_id: findUser?._id,

@@ -1,5 +1,5 @@
 import e from "express";
-import { authenticateUser } from "../middleware/authenticate";
+import { authorizedUser } from "../middleware/authorized";
 import { roles } from "../helper/enums";
 import {
   createOffer,
@@ -14,12 +14,12 @@ offerRouter.get("/all_offers", getAlloffers);
 offerRouter.get(
   "/reedme",
   (req: Request, res: Response, next: NextFunction) =>
-    authenticateUser(req, res, next, roles.User),
+    authorizedUser(req, res, next, roles.User),
   reedmeOffer
 );
 
 offerRouter.post(
   "/add",
-  (req, res, next) => authenticateUser(req, res, next, roles.SuperAdmin),
+  (req, res, next) => authorizedUser(req, res, next, roles.SuperAdmin),
   createOffer
 );

@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
-import jwt, { JwtPayload } from "jsonwebtoken";
-import { userModel } from "../model/user.model";
+import { decodeJWT } from "../helper/decodeJWT";
 import { airlineAdminModel } from "../model/airline_admin.model";
 import { RuleBase } from "../helper/interfaces";
 import { AddOnType, Flightclass } from "../helper/enums";
@@ -8,10 +7,7 @@ import { ruleModel } from "../model/rules.model";
 import mongoose from "mongoose";
 
 export const addRule = async (req: Request, res: Response) => {
-  let token: any = req.cookies.token;
-
-  let decode: JwtPayload = <JwtPayload>jwt.decode(token);
-  let findUser = await userModel.findOne({ email: decode.email }).exec();
+  let findUser = await decodeJWT(req);
 
   if (parseInt(req.query.type as string) == AddOnType.Baggage) {
     const findAirlineId = await airlineAdminModel
@@ -62,10 +58,7 @@ export const addRule = async (req: Request, res: Response) => {
 };
 
 export const getRules = async (req: Request, res: Response) => {
-  let token: any = req.cookies.token;
-
-  let decode: JwtPayload = <JwtPayload>jwt.decode(token);
-  let findUser = await userModel.findOne({ email: decode.email }).exec();
+  let findUser = await decodeJWT(req);
 
   const findAirlineId = await airlineAdminModel
     .findOne({

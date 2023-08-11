@@ -6,6 +6,7 @@ import jwt from "jsonwebtoken";
 import { userModel } from "../model/user.model";
 import { airlineAdminModel } from "../model/airline_admin.model";
 import { uploadImage } from "../helper/awsmethods";
+import { decodeJWT } from "../helper/decodeJWT";
 
 export const getAirlines = async (req: Request, res: Response) => {
   try {
@@ -21,11 +22,8 @@ export const getAirlines = async (req: Request, res: Response) => {
 
 export const getMyAirlinesDetails = async (req: Request, res: Response) => {
   try {
-    let token: any = req.cookies.token;
 
-    let decode: JwtPayload = <JwtPayload>jwt.decode(token);
-    let findUser = await userModel.findOne({ email: decode.email }).exec();
-
+    let findUser = await decodeJWT(req)
     const findAirlineAdmin = await airlineAdminModel
       .findOne({
         user_id: findUser?._id,
@@ -88,10 +86,8 @@ export const updateAirline = async (req: Request, res: Response) => {
   let valid = validateAirline(req.body);
   if (!valid["error"]) {
     try {
-      let token: any = req.cookies.token;
-
-      let decode: JwtPayload = <JwtPayload>jwt.decode(token);
-      let findUser = await userModel.findOne({ email: decode.email }).exec();
+   
+      let findUser = await decodeJWT(req)
 
       const findAirlineAdmin = await airlineAdminModel
         .findOne({
@@ -102,26 +98,37 @@ export const updateAirline = async (req: Request, res: Response) => {
       const findAirline = await airlineModel
         .findById(findAirlineAdmin?.airline_id, { _id: 0, __v: 0 })
         .exec();
-      if (findAirline) {
-        await airlineModel
-          .updateOne(
-            { airline_name: req.body.airline_name },
-            { $set: req.body }
-          )
-          .exec();
-        res.status(200).send({
-          validation: 1,
-          update: 1,
-          message: "Sucessfully Updated!",
-        });
-      } else {
-        res.status(400).json({
-          validation: 1,
-          find: 0,
-          update: 0,
-          message: "Unable to Update due to airline not found!",
-        });
-      }
+        console.log(findAirline);
+        console.log(req.body);
+
+        if (findAirline) {
+          const respo = await airlineModel
+            .updateOne(
+              { airline_id: findAirline.airline_id },
+              {
+                $set: {
+                  airline_id: findAirline.airline_id,
+                  airline_name: req.body.airline_name,
+                  airline_location: req.body.airline_location,
+                  airline_code: findAirline.airline_code,
+                },
+              }
+            )
+            .exec();
+          res.status(200).send({
+            validation: 1,
+            update: 1,
+            message: "Sucessfully Updated!",
+            res: respo,
+          });
+        } else {
+          res.status(400).json({
+            validation: 1,
+            find: 0,
+            update: 0,
+            message: "Unable to Update due to airline not found!",
+          });
+        }
     } catch (e) {
       res.status(500).json({
         error: 1,
@@ -154,10 +161,8 @@ export const updateIcon = async (req: Request, res: Response) => {
 
     let url = await uploadImage(fileParams);
     if (url) {
-      let token: any = req.cookies.token;
 
-      let decode: JwtPayload = <JwtPayload>jwt.decode(token);
-      let findUser = await userModel.findOne({ email: decode.email }).exec();
+      let findUser = await decodeJWT(req)
 
       try {
         const findAirlineAdmin = await airlineAdminModel

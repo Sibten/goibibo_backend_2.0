@@ -16,12 +16,16 @@ export const createOffer = async (req: Request, res: Response) => {
     if (
       offerData.offer_name != "" &&
       offerData.referal_code != "" &&
-      offerData.offer_discount != 0
+      offerData.offer_discount != 0 &&
+      (offerData.offer_discount < 0.5 || offerData.offer_discount < 10000)
     ) {
       const newOffer = new offerModel(offerData);
       await newOffer.save();
       res.status(200).json({ add: 1, message: "offer created!" });
-    } else throw new Error("Provide required details!");
+    } else
+      throw new Error(
+        "Provide required details or Offer discount too much high!"
+      );
   } catch (e) {
     res.status(400).json({ add: 0, message: "Error", error: e });
   }

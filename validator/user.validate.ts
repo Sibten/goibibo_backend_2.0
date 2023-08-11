@@ -8,9 +8,7 @@ export const validateUser = (user: Schema) => {
     user_name: Joi.string().optional(),
     first_name: Joi.string().optional(),
     last_name: Joi.string().optional(),
-    email: Joi.string()
-      .regex(/[A-Za-z0-9._-]+@[a-z0-9.]+.[a-z]{2,4}/)
-      .optional(),
+    email: Joi.string().regex(/[A-Za-z0-9._-]+@[a-z0-9.]+.[a-z]{2,4}/),
     password: Joi.string()
       .regex(/^.*(?=.{8,16})(?=.*[a-zA-Z])(?=.*\d)(?=.*[@-_!#$%"']).*$/)
       .optional(),

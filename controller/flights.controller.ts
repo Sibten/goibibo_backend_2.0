@@ -17,6 +17,7 @@ import { airbusModel } from "../model/airbus.model";
 import { airlineModel } from "../model/airline.model";
 import { fareModel } from "../model/fare.model";
 import { ruleModel } from "../model/rules.model";
+import { decodeJWT } from "../helper/decodeJWT";
 
 export const scheduleFlight = async (req: Request, res: Response) => {
   let sourceTime = req.body.source_time;
@@ -50,8 +51,6 @@ export const scheduleFlight = async (req: Request, res: Response) => {
       airbus_code: req.body.airbus_code,
     })
     .exec();
-
-  // console.log(findAirbus)
 
   const ScheduleDate: Date = new Date(req.body.source_time);
 
@@ -122,10 +121,13 @@ export const scheduleFlight = async (req: Request, res: Response) => {
     findAirbus &&
     findRule
   ) {
+    const isInternational = req.query.isInternational?.toString() == "true";
+    console.log(req.query.isInternational, isInternational);
     const FlightData: FlightBase = {
       flight_no: `${findAirlineDetails?.airline_code}-${
         findRoute.route_id?.split("-")[1]
       }${findAirbus.airbus_code?.toString().replace("-", "")}`,
+      is_international: isInternational,
       airline_id: findAirlineDetails?._id ?? null,
       route_id: findRoute._id ?? null,
       airbus_id: findAirbus?._id ?? null,
@@ -133,7 +135,7 @@ export const scheduleFlight = async (req: Request, res: Response) => {
       status: FlightStatus.Schduleded,
       rule: findRule?._id ?? null,
     };
-    console.log(FlightData);
+    // console.log(FlightData);
     try {
       await flightModel
         .updateOne(
@@ -145,6 +147,7 @@ export const scheduleFlight = async (req: Request, res: Response) => {
               booked_seats: bookedSeat,
             },
             $set: {
+              is_international: FlightData.is_international,
               flight_no: FlightData.flight_no,
               airline_id: FlightData.airline_id,
               route_id: FlightData.route_id,
@@ -205,9 +208,7 @@ export const getFlightDetails = async (req: Request, res: Response) => {
 };
 
 export const getMyAirlineFlights = async (req: Request, res: Response) => {
-  let token: any = req.cookies.token;
-  let decode: JwtPayload = <JwtPayload>jwt.decode(token);
-  let findUser = await userModel.findOne({ email: decode.email }).exec();
+  let findUser = await decodeJWT(req);
 
   const findAirlineId = await airlineAdminModel
     .findOne({

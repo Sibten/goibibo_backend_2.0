@@ -67,6 +67,12 @@ const getFlightsOnRoute = async (req: Request, res: Response) => {
               available_seats: 1,
               booked_seats: 1,
               flight_no: 1,
+              airbus_id: 1,
+              airline_id: 1,
+              fare: 1,
+              route_id: 1,
+              rule: 1,
+              status: 1,
             }
           )
           .populate({
@@ -118,6 +124,12 @@ const getFlightsOnRoute = async (req: Request, res: Response) => {
               available_seats: 1,
               booked_seats: 1,
               flight_no: 1,
+              airbus_id: 1,
+              airline_id: 1,
+              fare: 1,
+              route_id: 1,
+              rule: 1,
+              status: 1,
             }
           )
           .populate({
@@ -169,6 +181,12 @@ const getFlightsOnRoute = async (req: Request, res: Response) => {
               available_seats: 1,
               booked_seats: 1,
               flight_no: 1,
+              airbus_id: 1,
+              airline_id: 1,
+              fare: 1,
+              route_id: 1,
+              rule: 1,
+              status: 1,
             }
           )
           .populate({
@@ -219,6 +237,12 @@ const getFlightsOnRoute = async (req: Request, res: Response) => {
               available_seats: 1,
               booked_seats: 1,
               flight_no: 1,
+              airbus_id: 1,
+              airline_id: 1,
+              fare: 1,
+              route_id: 1,
+              rule: 1,
+              status: 1,
             }
           )
           .populate({

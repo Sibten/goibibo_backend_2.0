@@ -12,14 +12,27 @@ import { welcomeGreetinghtml } from "../view/welcome.template";
 import { roles } from "../helper/enums";
 import { roleModel } from "../model/roles.model";
 import { uploadImage } from "../helper/awsmethods";
-import { FileParams } from "../helper/interfaces";
+import { AirlineAdminBase, FileParams } from "../helper/interfaces";
 import { bookingModel } from "../model/booking.model";
 import { JwtPayload } from "jsonwebtoken";
+import mongoose from "mongoose";
+import { insertAirlineAdmin } from "./airline_admin.controller";
+import { airlineModel } from "../model/airline.model";
+import { validatePassword } from "../validator/password.validate";
+import { authentication } from "../middleware/authentication";
 
-export const addUser = async (req: Request, res: Response): Promise<void> => {
+export const addUser = async (
+  req: Request,
+  res: Response,
+  role: number
+): Promise<any> => {
   const validate = validateUser(req.body);
-  const findRole = await roleModel.findOne({ role_name: "User" }).exec();
-  if (!validate["error"]) {
+
+  const findRole = await roleModel.findOne({ role_id: role }).exec();
+
+  const findUser = await userModel.findOne({ email: req.body.email }).exec();
+
+  if (!validate.error && !findUser) {
     let payload: any = {
       profile_photo:
         "https://res.cloudinary.com/dgsqarold/image/upload/v1685697769/Goibibo/3237472_tgty4m.png",
@@ -28,40 +41,52 @@ export const addUser = async (req: Request, res: Response): Promise<void> => {
       user_name: "TRAVELLER",
     };
     try {
-      let seckey = process.env.SEC_KEY ?? "goibibo_Sec_key";
-      const token: string = jwt.sign(payload, seckey);
-      let findRole = await roleModel.findOne({ role_id: roles.User }).exec();
-      payload.role = findRole?._id;
-
       const newUser = new userModel(payload);
       await newUser.save();
 
-      let status = await sendMail(
-        req.body.email,
-        "Greetings from Goibibo",
-        welcomeGreetinghtml(req.body.user_name)
-      );
-      res.status(200).json({
+      if (role == roles.Admin) {
+        payload.password = (await bcrypt.hash(req.body.password, 8)) ?? "";
+        const newUser = new userModel(payload);
+        await newUser.save();
+        return {
+          login: 1,
+          id: newUser._id,
+        };
+      }
+      // let status = await sendMail(
+      //   req.body.email,
+      //   "Greetings from Goibibo",
+      //   welcomeGreetinghtml(req.body.user_name)
+      // );
+      let status = "";
+
+      let seckey = process.env.SEC_KEY ?? "goibibo_Sec_key";
+      const token: string = jwt.sign(payload, seckey);
+      res.status(200);
+
+      return {
         login: 1,
         newuser: 1,
         verfied: 1,
         message: "New user added & logged in",
         token: token,
         status: status,
-      });
+      };
     } catch (e) {
-      res.status(500).json({
-        error: 1,
-        message: "Internal database error",
+      res.status(400);
+      return {
+        login: 0,
+        message: "Something bad happen!",
         error_desc: e,
-      });
+      };
     }
   } else {
-    res.status(400).json({
-      error: 1,
-      message: "User data validation error!",
-      error_desc: validate["error"],
-    });
+    res.status(400);
+    return {
+      login: 0,
+      message: "User data validation error! or user alreday present",
+      error_desc: validate["error"] ?? "",
+    };
   }
 };
 
@@ -154,6 +179,7 @@ export const generateOTP = async (
       await otpModel
         .updateOne(
           { email: email_id },
+
           {
             $set: {
               email: email_id,
@@ -166,6 +192,7 @@ export const generateOTP = async (
         )
         .exec();
       // let status = await sendMailtoClient(email_id, OTP);
+      let status = "";
 
       if (findMail) {
         res.status(200).json({
@@ -174,7 +201,7 @@ export const generateOTP = async (
           email: email_id,
           date: date,
           expiryTime: expiryTime,
-          // status: status,
+          status: status,
         });
       } else {
         res.status(200).json({
@@ -183,7 +210,7 @@ export const generateOTP = async (
           otp: OTP,
           date: date,
           expiryTime: expiryTime,
-          // status: status,
+          status: status,
         });
       }
     } catch (e) {
@@ -201,6 +228,29 @@ export const generateOTP = async (
   }
 };
 
+export const createAdminUser = async (req: Request, res: Response) => {
+  try {
+    const response = await addUser(req, res, roles.Admin);
+
+    if (response.login) {
+      const airline = await airlineModel
+        .findOne({ airline_id: req.query.airline })
+        .exec();
+      if (airline) {
+        const data: AirlineAdminBase = {
+          airline_id: airline._id,
+          user_id: response.id,
+        };
+        await insertAirlineAdmin(data, res);
+      } else throw new Error("Unable to find the airline");
+    } else res.send(response);
+  } catch (e) {
+    res
+      .status(400)
+      .json({ message: "Something bad happen!", error: 1, desc: e });
+  }
+};
+
 export const validateOTP = async (
   req: Request,
   res: Response
@@ -212,7 +262,8 @@ export const validateOTP = async (
   const date = new Date();
   if (findOTP) {
     if (OTP == findOTP?.otp && !findUser && date <= findOTP?.expriy_time!) {
-      await addUser(req, res);
+      const response = await addUser(req, res, roles.User);
+      res.json(response);
     } else if (
       OTP == findOTP?.otp &&
       findUser &&
@@ -241,6 +292,33 @@ export const validateOTP = async (
   }
 };
 
+export const changePassword = async (req: Request, res: Response) => {
+  const validate = validatePassword(req.body);
+  let findUser = await userModel.findOne({ email: req.body.email }).exec();
+  const auth = await authentication(req);
+  if (findUser && !validate.error && auth) {
+    try {
+      const password = await bcrypt.hash(req.body.password, 8);
+      await userModel
+        .findByIdAndUpdate(findUser._id, { $set: { password: password } })
+        .exec();
+
+      res
+        .status(200)
+        .json({ update: 1, message: "Password updated Successfully!" });
+    } catch (e) {
+      res
+        .status(400)
+        .json({ update: 0, message: "something bad happen!", desc: e });
+    }
+  } else {
+    res.status(401).json({
+      update: 0,
+      message: "unauthorized access! or validation error!",
+    });
+  }
+};
+
 export const loginViaCredential = async (req: Request, res: Response) => {
   let mail = req.body.email;
   let password = req.body.password;
@@ -250,7 +328,9 @@ export const loginViaCredential = async (req: Request, res: Response) => {
     let compare = await bcrypt.compare(password, finduser.password!);
     let payload = { email: finduser.email, role: finduser.role };
     let seckey = process.env.SEC_KEY ?? "goibibo_Sec_key";
-    const token = jwt.sign(payload, seckey, { expiresIn: "1h" });
+    const token = jwt.sign(payload, seckey);
+    res.cookie("email", finduser.email);
+    res.cookie("token", token);
     if (compare) {
       res.status(200).json({ login: 1, message: "Login Sucess", token: token });
     } else {
@@ -264,30 +344,36 @@ export const loginViaCredential = async (req: Request, res: Response) => {
 };
 
 export const getUserDetails = async (req: Request, res: Response) => {
-  let findUser = await userModel
-    .findOne(
-      { email: req.query.email },
-      {
-        _id: 0,
-        role: 1,
-        user_name: 1,
-        email: 1,
-        profile_photo: 1,
-        date_of_birth: 1,
-        first_name: 1,
-        middle_name: 1,
-        last_name: 1,
-        gender: 1,
-        city: 1,
-        nationality: 1,
-        state: 1,
-        pincode: 1,
-        billing_address: 1,
-      }
-    )
-    .populate({ path: "role", select: "role_id role_name -_id" })
-    .exec();
-  res.status(200).json(findUser);
+  const status = await authentication(req);
+
+  if (status) {
+    let findUser = await userModel
+      .findOne(
+        { email: req.query.email },
+        {
+          _id: 0,
+          role: 1,
+          user_name: 1,
+          email: 1,
+          profile_photo: 1,
+          date_of_birth: 1,
+          first_name: 1,
+          middle_name: 1,
+          last_name: 1,
+          gender: 1,
+          city: 1,
+          nationality: 1,
+          state: 1,
+          pincode: 1,
+          billing_address: 1,
+        }
+      )
+      .populate({ path: "role", select: "role_id role_name -_id" })
+      .exec();
+    res.status(200).json(findUser);
+  } else {
+    res.status(401).json({ find: 0, message: "Unauthorized Access!" });
+  }
 };
 
 export const getMyTrips = async (req: Request, res: Response) => {

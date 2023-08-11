@@ -16,6 +16,11 @@ export interface SeatAvalibility {
   FC: number;
 }
 
+export interface AirlineAdminBase {
+  airline_id: mongoose.Types.ObjectId;
+  user_id: mongoose.Types.ObjectId;
+}
+
 export interface ClassMap {
   class_type?: number;
   row_start?: number;
@@ -45,6 +50,7 @@ export interface BookedSeats {
 }
 
 export interface FlightBase {
+  is_international: boolean;
   flight_no: string;
   airline_id: mongoose.Types.ObjectId | null;
   route_id: mongoose.Types.ObjectId | null;

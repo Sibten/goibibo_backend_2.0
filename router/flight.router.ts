@@ -1,5 +1,5 @@
 import e from "express";
-import { authenticateUser } from "../middleware/authenticate";
+import { authorizedUser } from "../middleware/authorized";
 import { roles } from "../helper/enums";
 import {
   addBookedSeat,
@@ -15,7 +15,7 @@ export const flightRouter = e.Router();
 
 flightRouter.get("/get_flight", getFlightDetails);
 flightRouter.use((req, res, next) =>
-  authenticateUser(req, res, next, roles.Admin)
+  authorizedUser(req, res, next, roles.Admin)
 );
 
 flightRouter.post("/schedule", scheduleFlight);

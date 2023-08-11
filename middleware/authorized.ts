@@ -2,7 +2,7 @@ import jwt, { JwtPayload } from "jsonwebtoken";
 import { NextFunction, Request, Response } from "express";
 import { roleModel } from "../model/roles.model";
 
-export const authenticateUser = async (
+export const authorizedUser = async (
   req: Request,
   res: Response,
   next: NextFunction,
@@ -20,7 +20,7 @@ export const authenticateUser = async (
     } else {
       res.status(401).json({ error: 1, message: "unauthorized access!" });
     }
-  } catch (e:any) {
+  } catch (e: any) {
     res.status(400).json({ error: 1, error_desc: e.message });
   }
 };

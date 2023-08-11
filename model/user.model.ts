@@ -1,9 +1,6 @@
 import mongoose from "mongoose";
 
 
-
-
-
 export const userschema: mongoose.Schema = new mongoose.Schema(
   {
     profile_photo: String,

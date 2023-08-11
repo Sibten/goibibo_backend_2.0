@@ -7,9 +7,7 @@ import { cityModel } from "../model/city.model";
 import process = require("process");
 import GeoPoint from "geopoint";
 import { RouteBase } from "../helper/interfaces";
-import { JwtPayload } from "jsonwebtoken";
-import jwt from "jsonwebtoken";
-import { userModel } from "../model/user.model";
+import { decodeJWT } from "../helper/decodeJWT";
 import { airlineModel } from "../model/airline.model";
 import { airlineAdminModel } from "../model/airline_admin.model";
 
@@ -52,10 +50,7 @@ const findCity = async (code: string) => {
 };
 
 export const addRoute = async (req: Request, res: Response) => {
-  let token: any = req.cookies.token;
-
-  let decode: JwtPayload = <JwtPayload>jwt.decode(token);
-  let findUser = await userModel.findOne({ email: decode.email }).exec();
+  let findUser = await decodeJWT(req);
 
   const findAirlineId = await airlineAdminModel
     .findOne({
@@ -66,6 +61,8 @@ export const addRoute = async (req: Request, res: Response) => {
   const findAirlineDetails = await airlineModel
     .findOne({ _id: findAirlineId?.airline_id })
     .exec();
+  
+  console.log(findAirlineDetails)
 
   let valid = validateRoute(req.body);
   if (!valid["error"]) {
@@ -110,10 +107,7 @@ export const addRoute = async (req: Request, res: Response) => {
 };
 
 export const getRouteDetails = async (req: Request, res: Response) => {
-  let token: any = req.cookies.token;
-
-  let decode: JwtPayload = <JwtPayload>jwt.decode(token);
-  let findUser = await userModel.findOne({ email: decode.email }).exec();
+  let findUser = await decodeJWT(req);
 
   const findAirlineId = await airlineAdminModel
     .findOne({

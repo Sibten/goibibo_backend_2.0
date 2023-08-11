@@ -6,6 +6,7 @@ import mongoose from "mongoose";
 const flightSchema = new mongoose.Schema(
   {
     flight_no: String,
+    is_international: Boolean,
     airline_id: { type: mongoose.Types.ObjectId, ref: "airline" },
     route_id: { type: mongoose.Types.ObjectId, ref: "route" },
     airbus_id: { type: mongoose.Types.ObjectId, ref: "airbus" },
