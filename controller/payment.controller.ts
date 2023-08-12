@@ -42,128 +42,152 @@ export const createPaymentOrder = (req: Request, res: Response) => {
   }
 };
 
+const findJouernyFlight = async (flightNo: string) => {
+  const findFlight = await flightModel
+    .findOne({
+      flight_no: flightNo,
+    })
+    .exec();
+  return findFlight ?? null;
+};
+
 const updateFlight = async (
   flight_no: string,
   travel_date: string,
   booking_seat: Array<SeatBase>,
-  travel_class: number
+  travel_class: number,
+  booking_mail: string
 ) => {
-  const findFlight = await flightModel
-    .findOne({
-      flight_no: flight_no,
-    })
-    .exec();
+  const findFlight = await findJouernyFlight(flight_no);
+  try {
+    if (!findFlight) throw new Error("Not found");
+    const avaliable_seat = findFlight?.available_seats.find(
+      (s) => s.date?.toDateString() == new Date(travel_date).toDateString()
+    );
 
-  const avaliable_seat = findFlight?.available_seats.find(
-    (s) => s.date?.toDateString() == new Date(travel_date).toDateString()
-  );
+    const booked_seat = findFlight?.booked_seats.find(
+      (s) => s.date?.toDateString() == new Date(travel_date).toDateString()
+    );
 
-  const booked_seat = findFlight?.booked_seats.find(
-    (s) => s.date?.toDateString() == new Date(travel_date).toDateString()
-  );
+    let seats: Array<string> = [];
 
-  let seats: Array<string> = [];
+    const seatData: Array<SeatBase> = booking_seat;
 
-  const seatData: Array<SeatBase> = booking_seat;
+    seatData?.forEach((s) => seats.push(s.seat_no));
 
-  seatData?.forEach((s) => seats.push(s.seat_no));
-
-  switch (travel_class) {
-    case Flightclass.Business:
-      seats.forEach((s) => {
-        if (booked_seat?.BC.includes(s)) {
-          throw new Error("Seat already booked");
-        }
-      });
-
-      await flightModel
-        .findOneAndUpdate(
-          {
-            flight_no: flight_no,
-            "booked_seats.date": travel_date,
-          },
-          {
-            $set: {
-              "available_seats.$.BC": avaliable_seat?.BC! - seats.length,
-            },
-            $push: { "booked_seats.$.BC": { $each: seats } },
+    switch (travel_class) {
+      case Flightclass.Business:
+        seats.forEach((s) => {
+          if (booked_seat?.BC.includes(s)) {
+            throw new Error("Seat already booked");
           }
-        )
-        .exec();
+        });
 
-      break;
-    case Flightclass.Economy:
-      seats.forEach((s) => {
-        if (booked_seat?.EC.includes(s)) {
-          console.log("seat...");
-          throw new Error("Seat already booked");
-        }
-      });
-
-      const seat_no = avaliable_seat?.EC! - seats.length;
-
-      await flightModel
-        .findOneAndUpdate(
-          {
-            flight_no: flight_no,
-            "booked_seats.date": travel_date,
-          },
-          {
-            $set: {
-              "available_seats.$.EC": seat_no,
+        await flightModel
+          .findOneAndUpdate(
+            {
+              flight_no: flight_no,
+              "booked_seats.date": travel_date,
+              "booking_id.date": travel_date,
             },
-            $push: { "booked_seats.$.EC": { $each: seats } },
-          }
-        )
-        .exec();
+            {
+              $set: {
+                "available_seats.$.BC": avaliable_seat?.BC! - seats.length,
+              },
+              $push: {
+                "booked_seats.$.BC": { $each: seats },
+                "booking_id.$.id": booking_mail,
+              },
+            }
+          )
+          .exec();
 
-      break;
-    case Flightclass.FirstClass:
-      seats.forEach((s) => {
-        if (booked_seat?.FC.includes(s)) {
-          throw new Error("Seat already booked");
-        }
-      });
-      await flightModel
-        .findOneAndUpdate(
-          {
-            flight_no: flight_no,
-            "booked_seats.date": travel_date,
-          },
-          {
-            $set: {
-              "available_seats.$.FC": avaliable_seat?.FC! - seats.length,
+        break;
+      case Flightclass.Economy:
+        seats.forEach((s) => {
+          if (booked_seat?.EC.includes(s)) {
+            console.log("seat...");
+            throw new Error("Seat already booked");
+          }
+        });
+
+        const seat_no = avaliable_seat?.EC! - seats.length;
+
+        await flightModel
+          .findOneAndUpdate(
+            {
+              flight_no: flight_no,
+              "booked_seats.date": travel_date,
+              "booking_id.date": travel_date,
             },
-            $push: { "booked_seats.$.FC": { $each: seats } },
-          }
-        )
-        .exec();
+            {
+              $set: {
+                "available_seats.$.EC": seat_no,
+              },
+              $push: {
+                "booked_seats.$.EC": { $each: seats },
+                "booking_id.$.id": booking_mail,
+              },
+            }
+          )
+          .exec();
 
-      break;
-    case Flightclass.PremiumEconomy:
-      seats.forEach((s) => {
-        if (booked_seat?.PE.includes(s)) {
-          throw new Error("Seat already booked");
-        }
-      });
-      await flightModel
-        .findOneAndUpdate(
-          {
-            flight_no: flight_no,
-            "booked_seats.date": travel_date,
-          },
-          {
-            $set: {
-              "available_seats.$.PE": avaliable_seat?.PE! - seats.length,
+        break;
+      case Flightclass.FirstClass:
+        seats.forEach((s) => {
+          if (booked_seat?.FC.includes(s)) {
+            throw new Error("Seat already booked");
+          }
+        });
+        await flightModel
+          .findOneAndUpdate(
+            {
+              flight_no: flight_no,
+              "booked_seats.date": travel_date,
+              "booking_id.date": travel_date,
             },
-            $push: { "booked_seats.$.PE": { $each: seats } },
-          }
-        )
-        .exec();
+            {
+              $set: {
+                "available_seats.$.FC": avaliable_seat?.FC! - seats.length,
+              },
+              $push: {
+                "booked_seats.$.FC": { $each: seats },
+                "booking_id.$.id": booking_mail,
+              },
+            }
+          )
+          .exec();
 
-      break;
+        break;
+      case Flightclass.PremiumEconomy:
+        seats.forEach((s) => {
+          if (booked_seat?.PE.includes(s)) {
+            throw new Error("Seat already booked");
+          }
+        });
+        await flightModel
+          .findOneAndUpdate(
+            {
+              flight_no: flight_no,
+              "booked_seats.date": travel_date,
+              "booking_id.date": travel_date,
+            },
+            {
+              $set: {
+                "available_seats.$.PE": avaliable_seat?.PE! - seats.length,
+              },
+              $push: {
+                "booked_seats.$.PE": { $each: seats },
+                "booking_id.$.id": booking_mail,
+              },
+            }
+          )
+          .exec();
+        break;
+    }
+  } catch (e) {
+    return;
   }
-  return findFlight?._id ?? null;
 };
 
 const findCity = async (code: string) => {
@@ -215,31 +239,17 @@ export const validatePayment = async (req: Request, res: Response) => {
         payment_amount: IncomingData.payment,
       };
 
-      const dep_flight = await updateFlight(
-        IncomingData.dep_flight_no,
-        IncomingData.dep_date,
-        IncomingData.dep_booking_seat,
-        IncomingData.travel_class
-      );
-
-      console.log(dep_flight);
-
-      let rtn_flight = null;
-      if (IncomingData.rtn_flight_no && IncomingData.return_date) {
-        rtn_flight = await updateFlight(
-          IncomingData.rtn_flight_no,
-          IncomingData.return_date,
-          IncomingData.rtn_booking_seat,
-          IncomingData.travel_class
-        );
-      }
-
       const destn_city = await findCity(IncomingData.destn_city_code);
       const source_city = await findCity(IncomingData.source_city_code);
 
       const newPayment = new paymentModel(data);
       newPayment.save();
 
+      const dep_flight = await findJouernyFlight(IncomingData.dep_flight_no);
+      let rtn_flight = null;
+      if (IncomingData.return_date && IncomingData.rtn_flight_no) {
+        rtn_flight = await findJouernyFlight(IncomingData.rtn_flight_no);
+      }
       const bookingData: BookingData = {
         booking_stamp: new Date(),
         PNR_no: Date.now(),
@@ -252,8 +262,8 @@ export const validatePayment = async (req: Request, res: Response) => {
           return_date: IncomingData.return_date,
           destination_city: destn_city,
           source_city: source_city,
-          departure_flight: dep_flight,
-          return_flight: rtn_flight,
+          departure_flight: dep_flight?._id!,
+          return_flight: rtn_flight?._id!,
           peoples: [...req.body.peoples],
           infants: req.body.infants,
           address: req.body.address,
@@ -269,10 +279,38 @@ export const validatePayment = async (req: Request, res: Response) => {
 
       const newBooking = new bookingModel(bookingData);
       await newBooking.save();
+      await updateFlight(
+        IncomingData.dep_flight_no,
+        IncomingData.dep_date,
+        IncomingData.dep_booking_seat,
+        IncomingData.travel_class,
+        newBooking?.ticket_email ?? ""
+      );
+      if (IncomingData.rtn_flight_no && IncomingData.return_date) {
+        await updateFlight(
+          IncomingData.rtn_flight_no,
+          IncomingData.return_date,
+          IncomingData.rtn_booking_seat,
+          IncomingData.travel_class,
+          newBooking?.ticket_email ?? ""
+        );
+      }
 
+      // bookingData.jouerny_info.peoples[0],
+      // bookingData.PNR_no,
+      // bookingData.jouerny_info.departure_date,
+      // IncomingData.source_city_code,
+      // IncomingData.destn_city_code,
+      // bookingData.jouerny_info.peoples.length +
+      //   bookingData.jouerny_info.infants.length,
+      // getFlightClass(bookingData.class_type),
+      // data.razor_pay_id
       const temp = bookingTemplate(
-        bookingData.jouerny_info.peoples[0].first_name,
-        bookingData.PNR_no,
+        {
+          name: `${bookingData.jouerny_info.peoples[0].first_name}${bookingData.jouerny_info.peoples[0].last_name}`,
+          pnr: bookingData.PNR_no,
+          email: bookingData.ticket_email,
+        },
         bookingData.jouerny_info.departure_date,
         IncomingData.source_city_code,
         IncomingData.destn_city_code,
@@ -285,7 +323,7 @@ export const validatePayment = async (req: Request, res: Response) => {
 
       const status = await sendMail(
         bookingData.ticket_email,
-        "Goibibo Booking Confirmation",
+        "Goibibo - Booking Confirmation: Your Flight is Confirmed",
         temp
       );
 
@@ -341,3 +379,5 @@ export const IssueRefund = async (req: Request, res: Response) => {
     res.status(400).json({ message: "Somthing bad happen!", error: e });
   }
 };
+
+export const cancelBooking = async (req: Request, res: Response) => {};

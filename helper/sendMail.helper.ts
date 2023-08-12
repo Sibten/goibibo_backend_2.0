@@ -9,7 +9,11 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-export const sendMail = (email: string, subject: string, template: string) => {
+export const sendMail = (
+  email: string | Array<string>,
+  subject: string,
+  template: string
+) => {
   console.log(process.env.MAIL);
   let mailoptions = {
     from: `"Goibibo" <${process.env.MAIL ?? "testphp@mailtest.radixweb.net"}>`,

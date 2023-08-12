@@ -292,6 +292,14 @@ export const validateOTP = async (
   }
 };
 
+export const getRole = async (req: Request, res: Response) => {
+  let findUser = await userModel
+    .findOne({ email: req.query.email })
+    .populate({ path: "role", select: "role_id -_id" })
+    .exec();
+  res.status(200).json({ role: findUser?.role });
+};
+
 export const changePassword = async (req: Request, res: Response) => {
   const validate = validatePassword(req.body);
   let findUser = await userModel.findOne({ email: req.body.email }).exec();
@@ -323,14 +331,15 @@ export const loginViaCredential = async (req: Request, res: Response) => {
   let mail = req.body.email;
   let password = req.body.password;
   let finduser = await userModel.findOne({ email: mail }).exec();
-
+  console.log(finduser);
   if (finduser) {
-    let compare = await bcrypt.compare(password, finduser.password!);
+    let compare = await bcrypt.compare(password, finduser.password);
     let payload = { email: finduser.email, role: finduser.role };
     let seckey = process.env.SEC_KEY ?? "goibibo_Sec_key";
     const token = jwt.sign(payload, seckey);
     res.cookie("email", finduser.email);
     res.cookie("token", token);
+    console.log(compare);
     if (compare) {
       res.status(200).json({ login: 1, message: "Login Sucess", token: token });
     } else {

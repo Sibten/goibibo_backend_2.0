@@ -19,6 +19,7 @@ const flightSchema = new mongoose.Schema(
     booked_seats: [
       { date: Date, BC: [String], EC: [String], PE: [String], FC: [String] },
     ],
+    booking_id: [{ date: Date, id: [] }],
     rule: { type: mongoose.Types.ObjectId, ref: "rule" },
   },
   { timestamps: true }

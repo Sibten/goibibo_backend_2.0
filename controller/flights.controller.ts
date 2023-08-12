@@ -1,4 +1,4 @@
-import jwt, { JwtPayload } from "jsonwebtoken";
+import jwt, { JwtPayload, decode } from "jsonwebtoken";
 import { Request, Response } from "express";
 import { userModel } from "../model/user.model";
 import { airlineAdminModel } from "../model/airline_admin.model";
@@ -9,6 +9,7 @@ import {
   BookedSeats,
   Timing,
   SeatBase,
+  BookingBase,
 } from "../helper/interfaces";
 import { routeModel } from "../model/route.model";
 import { Flightclass, FlightStatus } from "../helper/enums";
@@ -18,6 +19,9 @@ import { airlineModel } from "../model/airline.model";
 import { fareModel } from "../model/fare.model";
 import { ruleModel } from "../model/rules.model";
 import { decodeJWT } from "../helper/decodeJWT";
+import { sendMail } from "../helper/sendMail.helper";
+import { getRescheduleTemplate } from "../view/reschedule.template";
+import { cityModel } from "../model/city.model";
 
 export const scheduleFlight = async (req: Request, res: Response) => {
   let sourceTime = req.body.source_time;
@@ -90,6 +94,11 @@ export const scheduleFlight = async (req: Request, res: Response) => {
     FC: [],
   };
 
+  const bookingId: BookingBase = {
+    date: ScheduleDate,
+    booking_id: [],
+  };
+
   const timing: Timing = {
     source_time: ScheduleDate,
     destination_time: new Date(req.body.destination_time),
@@ -145,6 +154,7 @@ export const scheduleFlight = async (req: Request, res: Response) => {
               timing: timing,
               available_seats: seat_avliable,
               booked_seats: bookedSeat,
+              booking_id: bookingId,
             },
             $set: {
               is_international: FlightData.is_international,
@@ -362,5 +372,115 @@ export const addBookedSeat = async (req: Request, res: Response) => {
     res.status(200).json({ add: 1, message: "Seat Booked!" });
   } catch (e) {
     res.status(400).json({ add: 0, message: "Error!", error: e });
+  }
+};
+
+export const updateFlight = async (req: Request, res: Response) => {
+  try {
+    const flightNo = req.query.flightNo;
+
+    const findFlight = await flightModel
+      .findOne({ flight_no: flightNo })
+      .populate({ path: "booking_id" })
+      .exec();
+
+    const mailList = [];
+
+    if (!findFlight) throw new Error("Flight not found!");
+    else {
+      let ids = findFlight.booking_id.find(
+        (d) =>
+          d.date?.toISOString() ==
+          new Date(req.body.old_source_time).toISOString()
+      );
+      mailList.push(...(ids?.id ?? ""));
+    }
+
+    const findUser = await decodeJWT(req);
+
+    const findAirlineId = await airlineAdminModel
+      .findOne({
+        user_id: findUser?._id,
+      })
+      .exec();
+    const findAirline = await airlineModel
+      .findById(findAirlineId?.airline_id)
+      .exec();
+
+    const findRoute = await routeModel.findById(findFlight.route_id).exec();
+
+    const sourceCity = await cityModel.findById(findRoute?.source_city).exec();
+    const destnCity = await cityModel
+      .findById(findRoute?.destination_city)
+      .exec();
+
+    if (
+      new Date() <= new Date(req.body.new_source_time) &&
+      new Date(req.body.new_source_time) <
+        new Date(req.body.new_destination_time) &&
+      findAirlineId?.airline_id.toString() == findFlight?.airline_id?.toString()
+    ) {
+      await flightModel
+        .findOneAndUpdate(
+          {
+            flight_no: flightNo,
+            timing: {
+              $elemMatch: {
+                source_time: req.body.old_source_time,
+                destination_time: req.body.old_destination_time,
+              },
+            },
+            booked_seats: {
+              $elemMatch: {
+                date: req.body.old_source_time,
+              },
+            },
+            available_seats: {
+              $elemMatch: {
+                date: req.body.old_source_time,
+              },
+            },
+            booking_id: {
+              $elemMatch: {
+                date: req.body.old_source_time,
+              },
+            },
+          },
+          {
+            $set: {
+              "timing.$": {
+                source_time: req.body.new_source_time,
+                destination_time: req.body.new_destination_time,
+              },
+              "booked_seats.$.date": req.body.new_source_time,
+              "available_seats.$.date": req.body.new_source_time,
+              "booking_id.$.date": req.body.new_source_time,
+            },
+          }
+        )
+        .exec();
+
+      const template = getRescheduleTemplate({
+        airline: findAirline?.airline_name ?? "",
+        flightno: findFlight.flight_no ?? "",
+        oldtime: req.body.old_source_time,
+        newtime: req.body.new_source_time,
+        source: sourceCity?.city_name ?? "",
+        destination: destnCity?.city_name ?? "",
+      });
+      console.log(mailList);
+      const status = await sendMail(
+        mailList,
+        "Goibibo Important Update: Your Flight has been Rescheduled",
+        template
+      );
+      res
+        .status(200)
+        .send({ update: 1, message: "Flight Upated!", status: status });
+    } else throw new Error("Invalid date or Invalid airline flight id");
+  } catch (e) {
+    res
+      .status(400)
+      .json({ update: 0, message: "Something bad happen", desc: e });
   }
 };

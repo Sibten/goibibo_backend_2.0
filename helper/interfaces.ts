@@ -49,6 +49,11 @@ export interface BookedSeats {
   FC: Array<string>;
 }
 
+export interface BookingBase {
+  date: Date;
+  booking_id: Array<mongoose.Types.ObjectId>;
+}
+
 export interface FlightBase {
   is_international: boolean;
   flight_no: string;

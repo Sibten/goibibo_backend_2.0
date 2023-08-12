@@ -4,6 +4,7 @@ import { roles } from "../helper/enums";
 import {
   addBookedSeat,
   getMyAirlineFlights,
+  updateFlight,
 } from "../controller/flights.controller";
 import {
   scheduleFlight,
@@ -21,3 +22,4 @@ flightRouter.use((req, res, next) =>
 flightRouter.post("/schedule", scheduleFlight);
 flightRouter.get("/my_airline_flights", getMyAirlineFlights);
 flightRouter.post("/add_booking_data", addBookedSeat);
+flightRouter.put("/reschedule", updateFlight);

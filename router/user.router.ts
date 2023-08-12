@@ -12,6 +12,7 @@ import {
   logout,
   createAdminUser,
   changePassword,
+  getRole,
 } from "../controller/user.controller";
 import { roles } from "../helper/enums";
 import {
@@ -23,17 +24,18 @@ export const userRouter: Router = e.Router();
 
 userRouter.post("/generateotp", generateOTP);
 userRouter.post("/validateotp", validateOTP);
+userRouter.post("/admin/login", loginViaCredential);
 
 userRouter.use((req, res, next) => authorizedUser(req, res, next, roles.User));
+userRouter.get("/getrole", getRole);
 userRouter.put("/updateprofile", updateUser);
 userRouter.post("/updateprofile/uploadphoto", uploadProfilePhoto);
-userRouter.post("/login", loginViaCredential);
 userRouter.get("/mydetails", getUserDetails);
 userRouter.get("/my_trips", getMyTrips);
 userRouter.get("/logout", logout);
-userRouter.post("/admin/login", loginViaCredential);
 
 userRouter.use((req, res, next) => authorizedUser(req, res, next, roles.Admin));
+
 userRouter.put("/admin/changepassword", changePassword);
 userRouter.use((req, res, next) =>
   authorizedUser(req, res, next, roles.SuperAdmin)

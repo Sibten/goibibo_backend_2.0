@@ -1,8 +1,5 @@
 import mongoose from "mongoose";
 
-import { number, string } from "joi";
-import { kStringMaxLength } from "buffer";
-
 
 
 const BookingSchema = new mongoose.Schema({
