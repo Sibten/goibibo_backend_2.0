@@ -4,8 +4,7 @@ import { otpModel } from "../model/otp-user.model";
 import { validateUser } from "../validator/user.validate";
 import otpGenerator from "otp-generator";
 import { validateEmail } from "../validator/otp-email.validate";
-import { sendMailtoClient } from "../helper/sendOTP.helper";
-import jwt from "jsonwebtoken";
+import jwt, { JwtPayload } from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import { sendMail } from "../helper/sendMail.helper";
 import { welcomeGreetinghtml } from "../view/welcome.template";
@@ -14,12 +13,11 @@ import { roleModel } from "../model/roles.model";
 import { uploadImage } from "../helper/awsmethods";
 import { AirlineAdminBase, FileParams } from "../helper/interfaces";
 import { bookingModel } from "../model/booking.model";
-import { JwtPayload } from "jsonwebtoken";
-import mongoose from "mongoose";
 import { insertAirlineAdmin } from "./airline_admin.controller";
 import { airlineModel } from "../model/airline.model";
 import { validatePassword } from "../validator/password.validate";
 import { authentication } from "../middleware/authentication";
+import { sendMailtoClient } from "../helper/sendOTP.helper";
 
 export const addUser = async (
   req: Request,
@@ -33,17 +31,20 @@ export const addUser = async (
   const findUser = await userModel.findOne({ email: req.body.email }).exec();
 
   if (!validate.error && !findUser) {
-    let payload: any = {
-      profile_photo:
-        "https://res.cloudinary.com/dgsqarold/image/upload/v1685697769/Goibibo/3237472_tgty4m.png",
-      email: req.body.email,
-      role: findRole?._id ?? "",
-      user_name: "TRAVELLER",
-    };
     try {
-      const newUser = new userModel(payload);
-      await newUser.save();
-
+      const payload = {
+        profile_photo:
+          "https://res.cloudinary.com/dgsqarold/image/upload/v1685697769/Goibibo/3237472_tgty4m.png",
+        email: req.body.email,
+        role: findRole?._id ?? "",
+        user_name: "TRAVELLER",
+        password: "",
+      };
+      let seckey = process.env.SEC_KEY ?? "goibibo_Sec_key";
+      const token: string = jwt.sign(
+        { email: payload.email, role: payload.role },
+        seckey
+      );
       if (role == roles.Admin) {
         payload.password = (await bcrypt.hash(req.body.password, 8)) ?? "";
         const newUser = new userModel(payload);
@@ -53,17 +54,18 @@ export const addUser = async (
           id: newUser._id,
         };
       }
-      // let status = await sendMail(
-      //   req.body.email,
-      //   "Greetings from Goibibo",
-      //   welcomeGreetinghtml(req.body.user_name)
-      // );
-      let status = "";
+      let status = await sendMail(
+        req.body.email,
+        "Greetings from Goibibo",
+        welcomeGreetinghtml(req.body.user_name)
+      );
+      // let status = "";
 
-      let seckey = process.env.SEC_KEY ?? "goibibo_Sec_key";
-      const token: string = jwt.sign(payload, seckey);
+      const newUser = new userModel(payload);
+      await newUser.save();
       res.status(200);
-
+      res.cookie("email", payload.email);
+      res.cookie("token", token);
       return {
         login: 1,
         newuser: 1,
@@ -191,8 +193,8 @@ export const generateOTP = async (
           { upsert: true }
         )
         .exec();
-      // let status = await sendMailtoClient(email_id, OTP);
-      let status = "";
+      let status = await sendMailtoClient(email_id, OTP);
+      // let status = "";
 
       if (findMail) {
         res.status(200).json({
@@ -269,8 +271,8 @@ export const validateOTP = async (
       findUser &&
       date <= findOTP?.expriy_time!
     ) {
-      let payload = { email: findUser.email, role: findUser.role };
       let seckey = process.env.SEC_KEY ?? "goibibo_Sec_key";
+      let payload = { email: findUser.email, role: findUser.role };
       const token = jwt.sign(payload, seckey);
       console.log(token);
       res.cookie("email", email);
@@ -300,11 +302,38 @@ export const getRole = async (req: Request, res: Response) => {
   res.status(200).json({ role: findUser?.role });
 };
 
+export const genAdminOTP = async (req: Request, res: Response) => {
+  try {
+    const findAdmin = await userModel.findOne({ email: req.body.email }).exec();
+    const findRole = await roleModel.findById(findAdmin?.role).exec();
+    if (findRole?.role_id == roles.Admin) {
+      await generateOTP(req, res);
+    } else {
+      res.status(401).json({ otp: 0, message: "Unauthorized access!" });
+    }
+  } catch (e) {
+    res.status(400).json({ otp: 0, message: "Something bad happen!", desc: e });
+  }
+};
+
+export const verifyAdminOTP = async (req: Request, res: Response) => {
+  try {
+    const findOTP = await otpModel.findOne({ email: req.body.email }).exec();
+    if (findOTP?.otp == parseInt(req.body.otp)) {
+      res.status(200).json({ valid: 1, message: "Otp verification is done" });
+    } else
+      res.status(401).json({ valid: 0, message: "Otp verifcation is failed" });
+  } catch (e) {
+    res
+      .status(400)
+      .json({ valid: 0, message: "Something bad happen!", desc: e });
+  }
+};
+
 export const changePassword = async (req: Request, res: Response) => {
   const validate = validatePassword(req.body);
   let findUser = await userModel.findOne({ email: req.body.email }).exec();
-  const auth = await authentication(req);
-  if (findUser && !validate.error && auth) {
+  if (findUser && !validate.error) {
     try {
       const password = await bcrypt.hash(req.body.password, 8);
       await userModel
@@ -326,6 +355,7 @@ export const changePassword = async (req: Request, res: Response) => {
     });
   }
 };
+
 
 export const loginViaCredential = async (req: Request, res: Response) => {
   let mail = req.body.email;

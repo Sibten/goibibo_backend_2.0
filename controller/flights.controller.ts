@@ -484,3 +484,9 @@ export const updateFlight = async (req: Request, res: Response) => {
       .json({ update: 0, message: "Something bad happen", desc: e });
   }
 };
+
+
+export const getBookingdetailsOfFlight = (req: Request, res: Response) => {
+  const flightNo = req.query.flightNo;
+  const date = req.query.date;
+};
