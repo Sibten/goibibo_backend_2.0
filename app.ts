@@ -15,7 +15,11 @@ const port = process.env.PORT ?? 5050;
 app.use(
   cors({
     credentials: true,
-    origin: ["http://localhost:3000", "http://192.168.102.29:3000"],
+    origin: [
+      "http://localhost:3000",
+      "http://192.168.102.29:3000",
+      "http://192.168.56.1:3000",
+    ],
   })
 );
 app.use(fileupload());

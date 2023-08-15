@@ -22,6 +22,7 @@ import { decodeJWT } from "../helper/decodeJWT";
 import { sendMail } from "../helper/sendMail.helper";
 import { getRescheduleTemplate } from "../view/reschedule.template";
 import { cityModel } from "../model/city.model";
+import { bookingModel } from "../model/booking.model";
 
 export const scheduleFlight = async (req: Request, res: Response) => {
   let sourceTime = req.body.source_time;
@@ -96,7 +97,7 @@ export const scheduleFlight = async (req: Request, res: Response) => {
 
   const bookingId: BookingBase = {
     date: ScheduleDate,
-    booking_id: [],
+    booking: [],
   };
 
   const timing: Timing = {
@@ -154,7 +155,7 @@ export const scheduleFlight = async (req: Request, res: Response) => {
               timing: timing,
               available_seats: seat_avliable,
               booked_seats: bookedSeat,
-              booking_id: bookingId,
+              bookings: bookingId,
             },
             $set: {
               is_international: FlightData.is_international,
@@ -381,19 +382,19 @@ export const updateFlight = async (req: Request, res: Response) => {
 
     const findFlight = await flightModel
       .findOne({ flight_no: flightNo })
-      .populate({ path: "booking_id" })
+      .populate({ path: "bookings" })
       .exec();
 
-    const mailList = [];
+    const emailList: Array<string> = [];
 
     if (!findFlight) throw new Error("Flight not found!");
     else {
-      let ids = findFlight.booking_id.find(
+      let data = findFlight.bookings.find(
         (d) =>
           d.date?.toISOString() ==
           new Date(req.body.old_source_time).toISOString()
       );
-      mailList.push(...(ids?.id ?? ""));
+      data?.booking.forEach((e) => emailList.push(e.mail ?? ""));
     }
 
     const findUser = await decodeJWT(req);
@@ -440,7 +441,7 @@ export const updateFlight = async (req: Request, res: Response) => {
                 date: req.body.old_source_time,
               },
             },
-            booking_id: {
+            bookings: {
               $elemMatch: {
                 date: req.body.old_source_time,
               },
@@ -454,26 +455,28 @@ export const updateFlight = async (req: Request, res: Response) => {
               },
               "booked_seats.$.date": req.body.new_source_time,
               "available_seats.$.date": req.body.new_source_time,
-              "booking_id.$.date": req.body.new_source_time,
+              "bookings.$.date": req.body.new_source_time,
             },
           }
         )
         .exec();
 
-      const template = getRescheduleTemplate({
-        airline: findAirline?.airline_name ?? "",
-        flightno: findFlight.flight_no ?? "",
-        oldtime: req.body.old_source_time,
-        newtime: req.body.new_source_time,
-        source: sourceCity?.city_name ?? "",
-        destination: destnCity?.city_name ?? "",
-      });
-      console.log(mailList);
-      const status = await sendMail(
-        mailList,
-        "Goibibo Important Update: Your Flight has been Rescheduled",
-        template
-      );
+      let status: any;
+      if (emailList.length > 0) {
+        const template = getRescheduleTemplate({
+          airline: findAirline?.airline_name ?? "",
+          flightno: findFlight.flight_no ?? "",
+          oldtime: req.body.old_source_time,
+          newtime: req.body.new_source_time,
+          source: sourceCity?.city_name ?? "",
+          destination: destnCity?.city_name ?? "",
+        });
+        status = await sendMail(
+          emailList,
+          "Goibibo Important Update: Your Flight has been Rescheduled",
+          template
+        );
+      }
       res
         .status(200)
         .send({ update: 1, message: "Flight Upated!", status: status });
@@ -485,8 +488,34 @@ export const updateFlight = async (req: Request, res: Response) => {
   }
 };
 
-
-export const getBookingdetailsOfFlight = (req: Request, res: Response) => {
+export const getBookingdetailsOfFlight = async (
+  req: Request,
+  res: Response
+) => {
   const flightNo = req.query.flightNo;
   const date = req.query.date;
+  // console.log(flightNo);
+  try {
+    const data = await flightModel
+      .findOne(
+        {
+          flight_no: flightNo,
+          "bookings.date": date,
+        },
+        { bookings: { $elemMatch: { date: date } } }
+      )
+      .populate({
+        path: "bookings.booking.id",
+        select: "jouerny_info addons  payment class_type status ",
+        populate: {
+          path: "payment jouerny_info.destination_city jouerny_info.source_city",
+          select: " -createdAt -updatedAt -_id -__v -user_id",
+        },
+      })
+      .select("bookings -_id ")
+      .exec();
+    res.status(200).json(data);
+  } catch (e) {
+    res.status(400).json({ error: 1, message: "error", desc: e });
+  }
 };

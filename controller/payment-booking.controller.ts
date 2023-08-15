@@ -15,6 +15,7 @@ import { cityModel } from "../model/city.model";
 import { sendMail } from "../helper/sendMail.helper";
 import { bookingTemplate } from "../view/booking.template";
 import { getFlightClass } from "../helper/Methods";
+import { number } from "joi";
 env.config();
 
 export const createPaymentOrder = (req: Request, res: Response) => {
@@ -56,7 +57,8 @@ const updateFlight = async (
   travel_date: string,
   booking_seat: Array<SeatBase>,
   travel_class: number,
-  booking_mail: string
+  booking_mail: string,
+  booking_id: mongoose.Types.ObjectId | null
 ) => {
   const findFlight = await findJouernyFlight(flight_no);
   try {
@@ -96,7 +98,7 @@ const updateFlight = async (
               },
               $push: {
                 "booked_seats.$.BC": { $each: seats },
-                "booking_id.$.id": booking_mail,
+                "bookings.$.booking": { mail: booking_mail, id: booking_id },
               },
             }
           )
@@ -118,7 +120,7 @@ const updateFlight = async (
             {
               flight_no: flight_no,
               "booked_seats.date": travel_date,
-              "booking_id.date": travel_date,
+              "bookings.date": travel_date,
             },
             {
               $set: {
@@ -126,7 +128,7 @@ const updateFlight = async (
               },
               $push: {
                 "booked_seats.$.EC": { $each: seats },
-                "booking_id.$.id": booking_mail,
+                "bookings.$.booking": { mail: booking_mail, id: booking_id },
               },
             }
           )
@@ -144,7 +146,7 @@ const updateFlight = async (
             {
               flight_no: flight_no,
               "booked_seats.date": travel_date,
-              "booking_id.date": travel_date,
+              "bookings.date": travel_date,
             },
             {
               $set: {
@@ -152,7 +154,7 @@ const updateFlight = async (
               },
               $push: {
                 "booked_seats.$.FC": { $each: seats },
-                "booking_id.$.id": booking_mail,
+                "bookings.$.booking": { mail: booking_mail, id: booking_id },
               },
             }
           )
@@ -170,7 +172,7 @@ const updateFlight = async (
             {
               flight_no: flight_no,
               "booked_seats.date": travel_date,
-              "booking_id.date": travel_date,
+              "bookings.date": travel_date,
             },
             {
               $set: {
@@ -178,7 +180,7 @@ const updateFlight = async (
               },
               $push: {
                 "booked_seats.$.PE": { $each: seats },
-                "booking_id.$.id": booking_mail,
+                "bookings.$.booking": { mail: booking_mail, id: booking_id },
               },
             }
           )
@@ -284,7 +286,8 @@ export const validatePayment = async (req: Request, res: Response) => {
         IncomingData.dep_date,
         IncomingData.dep_booking_seat,
         IncomingData.travel_class,
-        newBooking?.ticket_email ?? ""
+        newBooking?.ticket_email ?? "",
+        newBooking?._id ?? null
       );
       if (IncomingData.rtn_flight_no && IncomingData.return_date) {
         await updateFlight(
@@ -292,7 +295,8 @@ export const validatePayment = async (req: Request, res: Response) => {
           IncomingData.return_date,
           IncomingData.rtn_booking_seat,
           IncomingData.travel_class,
-          newBooking?.ticket_email ?? ""
+          newBooking?.ticket_email ?? "",
+          newBooking?._id
         );
       }
 
@@ -305,33 +309,36 @@ export const validatePayment = async (req: Request, res: Response) => {
       //   bookingData.jouerny_info.infants.length,
       // getFlightClass(bookingData.class_type),
       // data.razor_pay_id
-      const temp = bookingTemplate(
-        {
-          name: `${bookingData.jouerny_info.peoples[0].first_name}${bookingData.jouerny_info.peoples[0].last_name}`,
-          pnr: bookingData.PNR_no,
-          email: bookingData.ticket_email,
-        },
-        bookingData.jouerny_info.departure_date,
-        IncomingData.source_city_code,
-        IncomingData.destn_city_code,
-        bookingData.jouerny_info.peoples.length +
-          bookingData.jouerny_info.infants.length,
-        getFlightClass(bookingData.class_type),
-        data.razor_pay_id
-      );
-      console.log(bookingData.ticket_email);
+      try {
+        const temp = bookingTemplate(
+          {
+            name: `${bookingData.jouerny_info.peoples[0].first_name}${bookingData.jouerny_info.peoples[0].last_name}`,
+            pnr: bookingData.PNR_no,
+            email: bookingData.ticket_email,
+          },
+          bookingData.jouerny_info.departure_date,
+          IncomingData.source_city_code,
+          IncomingData.destn_city_code,
+          bookingData.jouerny_info.peoples.length +
+            bookingData.jouerny_info.infants.length,
+          getFlightClass(bookingData.class_type),
+          data.razor_pay_id
+        );
+        const status = await sendMail(
+          bookingData.ticket_email,
+          "Goibibo - Booking Confirmation: Your Flight is Confirmed",
+          temp
+        );
+        // console.log(bookingData.ticket_email);
 
-      const status = await sendMail(
-        bookingData.ticket_email,
-        "Goibibo - Booking Confirmation: Your Flight is Confirmed",
-        temp
-      );
-
-      res.status(200).json({
-        payment: 1,
-        message: "Payment Succesful and Booking Confirmed!",
-        status: status,
-      });
+        res.status(200).json({
+          payment: 1,
+          message: "Payment Succesful and Booking Confirmed!",
+          status: status,
+        });
+      } catch (e) {
+        throw new Error("booking template error");
+      }
     } else {
       throw new Error("Invalid Transaction");
     }
@@ -371,13 +378,185 @@ export const IssueRefund = async (req: Request, res: Response) => {
   try {
     const d = instance.payments.refund(paymentId, {
       speed: "normal",
+      amount: req.body.amount * 100,
     });
-    res
-      .status(200)
-      .json({ message: "Payment Refund Issues generated!", data: d });
+    return { message: "Payment Refund Issues generated!", data: d };
+  } catch (e) {
+    res.status(400);
+    return { message: "Somthing bad happen!", error: e };
+  }
+};
+
+export const updateFlightIncSeat = async (
+  flight: string,
+  date: Date,
+  travel_class: number,
+  seats: Array<String>,
+  booking_id: mongoose.Types.ObjectId | null
+) => {
+  const totalSeat = seats.length;
+  switch (travel_class) {
+    case Flightclass.Business:
+      await flightModel.findOneAndUpdate(
+        {
+          flight_no: flight,
+          "available_seats.date": date,
+          "booked_seats.date": date,
+          "bookings.date": date,
+        },
+        {
+          $inc: {
+            "available_seats.$.BC": totalSeat,
+          },
+          $pull: {
+            "booked_seats.$.BC": { $in: seats },
+            "bookings.$.booking": { id: booking_id },
+          },
+        }
+      );
+      return;
+    case Flightclass.Economy:
+      console.log(seats.length);
+      await flightModel.findOneAndUpdate(
+        {
+          flight_no: flight,
+          "available_seats.date": date,
+          "booked_seats.date": date,
+          "bookings.date": date,
+        },
+        {
+          $inc: {
+            "available_seats.$.EC": totalSeat,
+          },
+          $pull: {
+            "booked_seats.$.EC": { $in: seats },
+            "bookings.$.booking": { id: booking_id },
+          },
+        }
+      );
+      console.log("Eco update");
+
+      return;
+    case Flightclass.FirstClass:
+      await flightModel.findOneAndUpdate(
+        {
+          flight_no: flight,
+          "available_seats.date": date,
+          "booked_seats.date": date,
+          "bookings.date": date,
+        },
+        {
+          $inc: {
+            "available_seats.$.FC": totalSeat,
+          },
+          $pull: {
+            "booked_seats.$.FC": { $in: seats },
+            "bookings.$.booking": { id: booking_id },
+          },
+        }
+      );
+      return;
+    case Flightclass.PremiumEconomy:
+      await flightModel.findOneAndUpdate(
+        {
+          flight_no: flight,
+          "available_seats.date": date,
+          "booked_seats.date": date,
+          "bookings.date": date,
+        },
+        {
+          $inc: {
+            "available_seats.$.PE": totalSeat,
+          },
+          $pull: {
+            "booked_seats.$.PE": { $in: seats },
+            "bookings.$.booking": { id: booking_id },
+          },
+        }
+      );
+      return;
+  }
+};
+
+export const cancelBooking = async (req: Request, res: Response) => {
+  const pnr = req.body.PNR_no;
+  console.log(pnr);
+
+  try {
+    const findBooking = await bookingModel
+      .findOne({ PNR_no: pnr }, { jouerny_info: 1, payment: 1 })
+      .exec();
+    // console.log(findBooking);
+    // res.json(findBooking);
+    // return;
+    if (findBooking) {
+      const depseats: Array<string> = [];
+
+      findBooking.jouerny_info?.peoples.forEach((d: any) =>
+        depseats.push(d.seat_no.seat_no)
+      );
+
+      // console.log(depseats);
+      const depFlight = await flightModel
+        .findById(findBooking.jouerny_info?.departure_flight)
+        .exec();
+      // console.log(depFlight);
+      await updateFlightIncSeat(
+        depFlight?.flight_no ?? "",
+        findBooking.jouerny_info?.departure_date!,
+        findBooking.class_type ?? 0,
+        depseats,
+        findBooking._id
+      );
+      // res.status(200).json(rtn);
+      if (findBooking.jouerny_info?.return_date) {
+        console.log("first");
+        let rtnFlight = await flightModel
+          .findById(findBooking.jouerny_info?.return_flight)
+          .exec();
+
+        const rtnseat: Array<string> = [];
+
+        findBooking.jouerny_info.peoples.forEach((d) => {
+          rtnseat.push(d.rtn_seat_no.seat_no);
+        });
+
+        await updateFlightIncSeat(
+          rtnFlight?.flight_no ?? "",
+          findBooking.jouerny_info?.return_date!,
+          findBooking.class_type ?? 0,
+          rtnseat,
+          findBooking._id
+        );
+      }
+
+      const findPayment = await paymentModel
+        .findById(findBooking.payment)
+        .exec();
+      let paymentRefund: any;
+      console.log(findPayment);
+      if (findPayment) {
+        req.body.amount =
+          (findPayment.payment_amount?.basic_total ?? 0) +
+          (findPayment.payment_amount?.total_add_on ?? 0);
+        req.body.payment_id = findPayment.razor_pay_id;
+
+        console.log(req.body);
+        paymentRefund = await IssueRefund(req, res);
+
+        await bookingModel.findByIdAndUpdate(findBooking._id, {
+          $set: { status: BookingStatus.Cancel },
+        });
+        res.status(200).json({
+          cancel: 1,
+          message: "Booking successfully cancelled",
+          payment: paymentRefund,
+        });
+      } else throw new Error("Payment error");
+
+      // res.status(200).json(seats);
+    } else res.status(204).json({ cancel: 0, message: "PNR not found!" });
   } catch (e) {
     res.status(400).json({ message: "Somthing bad happen!", error: e });
   }
 };
-
-export const cancelBooking = async (req: Request, res: Response) => {};

@@ -1,10 +1,11 @@
 import e from "express";
 import {
   IssueRefund,
+  cancelBooking,
   createPaymentOrder,
   getMyPayments,
   validatePayment,
-} from "../controller/payment.controller";
+} from "../controller/payment-booking.controller";
 import { authorizedUser } from "../middleware/authorized";
 import { roles } from "../helper/enums";
 
@@ -17,3 +18,4 @@ paymentRouter.post("/create", createPaymentOrder);
 paymentRouter.post("/validate", validatePayment);
 paymentRouter.get("/my_payments", getMyPayments);
 paymentRouter.post("/issue_refund", IssueRefund);
+paymentRouter.put("/booking/cancel", cancelBooking);

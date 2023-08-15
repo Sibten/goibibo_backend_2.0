@@ -54,12 +54,12 @@ export const addUser = async (
           id: newUser._id,
         };
       }
-      let status = await sendMail(
-        req.body.email,
-        "Greetings from Goibibo",
-        welcomeGreetinghtml(req.body.user_name)
-      );
-      // let status = "";
+      // let status = await sendMail(
+      //   req.body.email,
+      //   "Greetings from Goibibo",
+      //   welcomeGreetinghtml(req.body.user_name)
+      // );
+      let status = "";
 
       const newUser = new userModel(payload);
       await newUser.save();
@@ -193,8 +193,8 @@ export const generateOTP = async (
           { upsert: true }
         )
         .exec();
-      let status = await sendMailtoClient(email_id, OTP);
-      // let status = "";
+      // let status = await sendMailtoClient(email_id, OTP);
+      let status = "";
 
       if (findMail) {
         res.status(200).json({
@@ -355,7 +355,6 @@ export const changePassword = async (req: Request, res: Response) => {
     });
   }
 };
-
 
 export const loginViaCredential = async (req: Request, res: Response) => {
   let mail = req.body.email;

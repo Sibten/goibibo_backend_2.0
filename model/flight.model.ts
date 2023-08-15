@@ -1,8 +1,5 @@
 import mongoose from "mongoose";
 
-
-
-
 const flightSchema = new mongoose.Schema(
   {
     flight_no: String,
@@ -19,7 +16,17 @@ const flightSchema = new mongoose.Schema(
     booked_seats: [
       { date: Date, BC: [String], EC: [String], PE: [String], FC: [String] },
     ],
-    booking_id: [{ date: Date, id: [] }],
+    bookings: [
+      {
+        date: Date,
+        booking: [
+          {
+            id: { type: mongoose.Types.ObjectId, ref: "booking" },
+            mail: String,
+          },
+        ],
+      },
+    ],
     rule: { type: mongoose.Types.ObjectId, ref: "rule" },
   },
   { timestamps: true }

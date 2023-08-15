@@ -94,7 +94,7 @@ export const bookingTemplate = (
 		<div class="ticketContainer">
 		  <h3>Flight Details & Ticket Details</h3>
 		  <ul>
-			<li>Departure Date :${date.toLocaleString()}</li>
+			<li>Departure Date :${new Date(date).toLocaleString()}</li>
 			<li>Departure City :${dep_city}</li>
 			<li>Destination City : ${des_city}</li>
 			<li>Travellers : ${travellers}</li>

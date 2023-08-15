@@ -1,7 +1,7 @@
 export enum BookingStatus {
   Upcoming,
   Completed,
-  Closed,
+  Cancel,
 }
 export enum payment {
   Completed,

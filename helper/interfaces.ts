@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
 
-
 export interface FileParams {
   Bucket: string;
   Key: string;
@@ -51,7 +50,7 @@ export interface BookedSeats {
 
 export interface BookingBase {
   date: Date;
-  booking_id: Array<mongoose.Types.ObjectId>;
+  booking: Array<{ id: mongoose.Types.ObjectId; email: string }>;
 }
 
 export interface FlightBase {
@@ -150,9 +149,9 @@ export interface BookingData {
     source_city: mongoose.Types.ObjectId | null;
     departure_flight: mongoose.Types.ObjectId | null;
     return_flight: mongoose.Types.ObjectId | null;
-    address : string,
-    pincode : number,
-    state : string,
+    address: string;
+    pincode: number;
+    state: string;
     peoples: Array<{
       type: number;
       first_name: string;

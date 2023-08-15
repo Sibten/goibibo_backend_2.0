@@ -1,7 +1,5 @@
 import mongoose from "mongoose";
 
-
-
 const BookingSchema = new mongoose.Schema({
   booking_stamp: Date,
   PNR_no: Number,
@@ -18,16 +16,9 @@ const BookingSchema = new mongoose.Schema({
     return_flight: { type: mongoose.Types.ObjectId, ref: "flight" },
     peoples: [],
     address: String,
-    pincode : Number,
-    state : String,
-    infants: [
-      {
-        first_name: String,
-        last_name: String,
-        gender: String,
-        age: Number,
-      },
-    ],
+    pincode: Number,
+    state: String,
+    infants: [],
   },
   addons: {
     departure_addons: [],
