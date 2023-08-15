@@ -23,6 +23,7 @@ import { sendMail } from "../helper/sendMail.helper";
 import { getRescheduleTemplate } from "../view/reschedule.template";
 import { cityModel } from "../model/city.model";
 import { bookingModel } from "../model/booking.model";
+import mongoose from "mongoose";
 
 export const scheduleFlight = async (req: Request, res: Response) => {
   let sourceTime = req.body.source_time;
@@ -387,6 +388,8 @@ export const updateFlight = async (req: Request, res: Response) => {
 
     const emailList: Array<string> = [];
 
+    const bookingUpdate: Array<any> = [];
+
     if (!findFlight) throw new Error("Flight not found!");
     else {
       let data = findFlight.bookings.find(
@@ -394,7 +397,13 @@ export const updateFlight = async (req: Request, res: Response) => {
           d.date?.toISOString() ==
           new Date(req.body.old_source_time).toISOString()
       );
-      data?.booking.forEach((e) => emailList.push(e.mail ?? ""));
+      data?.booking.forEach((e) => {
+        let id = e.id;
+        emailList.push(e.mail ?? "");
+        bookingUpdate.push(e.id ?? null);
+      });
+
+      console.log(bookingUpdate);
     }
 
     const findUser = await decodeJWT(req);
