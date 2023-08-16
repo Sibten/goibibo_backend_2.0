@@ -398,11 +398,8 @@ export const updateFlight = async (req: Request, res: Response) => {
           new Date(req.body.old_source_time).toISOString()
       );
       data?.booking.forEach((e) => {
-        let id = e.id;
         emailList.push(e.mail ?? "");
-        bookingUpdate.push(e.id ?? null);
       });
-
       console.log(bookingUpdate);
     }
 
@@ -424,12 +421,36 @@ export const updateFlight = async (req: Request, res: Response) => {
       .findById(findRoute?.destination_city)
       .exec();
 
+    console.log(
+      new Date(req.body.new_source_time) <
+        new Date(req.body.new_destination_time)
+    );
     if (
       new Date() <= new Date(req.body.new_source_time) &&
       new Date(req.body.new_source_time) <
         new Date(req.body.new_destination_time) &&
       findAirlineId?.airline_id.toString() == findFlight?.airline_id?.toString()
     ) {
+      console.log("Hello");
+      await bookingModel
+        .updateMany(
+          {
+            "jouerny_info.departure_flight": findFlight._id,
+            "jouerny_info.departure_date": req.body.old_source_time,
+          },
+          { $set: { "jouerny_info.departure_date": req.body.new_source_time } }
+        )
+        .exec();
+      await bookingModel
+        .updateMany(
+          {
+            "jouerny_info.return_flight": findFlight._id,
+            "jouerny_info.return_date": req.body.old_source_time,
+          },
+          { $set: { "jouerny_info.return_date": req.body.new_source_time } }
+        )
+        .exec();
+
       await flightModel
         .findOneAndUpdate(
           {
@@ -489,7 +510,9 @@ export const updateFlight = async (req: Request, res: Response) => {
       res
         .status(200)
         .send({ update: 1, message: "Flight Upated!", status: status });
-    } else throw new Error("Invalid date or Invalid airline flight id");
+    } else {
+      throw new Error("Invalid date or Invalid airline flight id");
+    }
   } catch (e) {
     res
       .status(400)

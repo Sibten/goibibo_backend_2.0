@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { cityModel } from "../model/city.model";
+import { ResolveHostnameOptions } from "nodemailer/lib/shared";
 
 export const addCities = async (req: Request, res: Response) => {
   let data = req.body;
@@ -11,8 +12,15 @@ export const addCities = async (req: Request, res: Response) => {
 };
 
 export const getCities = async (req: Request, res: Response) => {
+  let data = await cityModel.find({}, { _id: 0, __v: 0 }).limit(5).exec();
+  res.status(200).send(data);
+};
+
+export const getCity = async (req: Request, res: Response) => {
   let data = await cityModel
-    .find({ country_name: "India" }, { _id: 0, __v: 0 })
+    .find({
+      city_name: { $regex: req.query.cityName },
+    })
     .exec();
   res.status(200).send(data);
 };

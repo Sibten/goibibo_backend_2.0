@@ -17,6 +17,15 @@ const getFlightsOnRoute = async (req: Request, res: Response) => {
     .exec();
   const Routes: Array<ObjectId> = [];
 
+  // const findRoute = await routeModel
+  //   .find({
+  //     $and: [
+  //       { $or: [{ source_city: startPoint?._id }, { stops: startPoint?._id }] },
+  //       { destination_city: endPoint?._id },
+  //     ],
+  //   })
+  //   .exec();
+
   const findRoute = await routeModel
     .find({ source_city: startPoint?._id, destination_city: endPoint?._id })
     .exec();
@@ -96,7 +105,7 @@ const getFlightsOnRoute = async (req: Request, res: Response) => {
             path: "rule",
             select: " -_id -__v -createdAt -updatedAt",
           })
-          .select("-_id -__v -createdAt -updatedAt")
+          .select("-_id")
           .sort({ "timing.source_time": 1 })
           .exec();
         break;
@@ -210,7 +219,7 @@ const getFlightsOnRoute = async (req: Request, res: Response) => {
             path: "rule",
             select: " -_id -__v -createdAt -updatedAt",
           })
-          .select("-_id -__v -createdAt -updatedAt")
+          .select("-_id")
           .sort({ "timing.source_time": 1 })
           .exec();
         break;
@@ -266,7 +275,7 @@ const getFlightsOnRoute = async (req: Request, res: Response) => {
             path: "rule",
             select: " -_id -__v -createdAt -updatedAt",
           })
-          .select("-_id -__v -createdAt -updatedAt")
+          .select("-_id ")
           .sort({ "timing.source_time": 1 })
           .exec();
         break;
