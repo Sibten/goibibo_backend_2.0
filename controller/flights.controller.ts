@@ -10,6 +10,7 @@ import {
   Timing,
   SeatBase,
   BookingBase,
+  FlightScheduleData,
 } from "../helper/interfaces";
 import { routeModel } from "../model/route.model";
 import { Flightclass, FlightStatus } from "../helper/enums";
@@ -23,18 +24,18 @@ import { sendMail } from "../helper/sendMail.helper";
 import { getRescheduleTemplate } from "../view/reschedule.template";
 import { cityModel } from "../model/city.model";
 import { bookingModel } from "../model/booking.model";
-import mongoose from "mongoose";
 
 export const scheduleFlight = async (req: Request, res: Response) => {
   let sourceTime = req.body.source_time;
   let destinationTime = req.body.destination_time;
 
-  try {
-    sourceTime = new Date(sourceTime);
-    destinationTime = new Date(destinationTime);
-  } catch (e) {
-    res.status(400).json({ error: 1, message: "Bad date request!" });
-  }
+  // try {
+  //   sourceTime = new Date(sourceTime);
+  //   destinationTime = new Date(destinationTime);
+  // } catch (e) {
+  //   res.status(400).json({ error: 1, message: "Bad date request!" });
+  // }
+
   const token: any = req.cookies.token;
   const decode: JwtPayload = <JwtPayload>jwt.decode(token);
 
@@ -146,8 +147,22 @@ export const scheduleFlight = async (req: Request, res: Response) => {
       status: FlightStatus.Schduleded,
       rule: findRule?._id ?? null,
     };
+
     // console.log(FlightData);
     try {
+      // const findFlight = await flightModel
+      //   .findOne({
+      //     timing: {
+      //       $elemMatch: {
+      //         source_time: timing.source_time,
+      //       },
+      //     },
+      //   })
+      //   .exec();
+      // if (findFlight) {
+      //   res.status(400).json({ add: 0, message: "Flight already present!" });
+      // }
+
       await flightModel
         .updateOne(
           { flight_no: FlightData.flight_no },

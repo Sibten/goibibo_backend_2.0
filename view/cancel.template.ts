@@ -70,7 +70,7 @@ export const cancelTemplate = (
 		<div class="container">
 			<div class="head">
 				<img
-				  src="https://res.cloudinary.com/dgsqarold/image/upload/v1685444859/Goibibo/goibibo-logo_qeiiq2.webp"
+				  src="https://res.cloudinary.com/dgsqarold/image/upload/v1691484041/Goibibo/GoibiboClone_bvxwj4.png"
 				  alt="Goibibo icon"
 				/>
 				<h1>Ticket Cancellation </h1>

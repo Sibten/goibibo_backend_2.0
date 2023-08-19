@@ -7,6 +7,11 @@ export interface FileParams {
   ContentType: string;
 }
 
+export interface FlightScheduleData {
+  source_time: string;
+  destination_time: string;
+}
+
 export interface SeatAvalibility {
   date: Date;
   BC: number;

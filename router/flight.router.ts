@@ -12,6 +12,7 @@ import {
   getFlightDetails,
 } from "../controller/flights.controller";
 import { addFare } from "../controller/fare.controller";
+import { validateFlightMiddleware } from "../middleware/validatteFlight.middleware";
 
 export const flightRouter = e.Router();
 
@@ -20,7 +21,7 @@ flightRouter.use((req, res, next) =>
   authorizedUser(req, res, next, roles.Admin)
 );
 
-flightRouter.post("/schedule", scheduleFlight);
+flightRouter.post("/schedule", validateFlightMiddleware, scheduleFlight);
 flightRouter.get("/my_airline_flights", getMyAirlineFlights);
 flightRouter.post("/add_booking_data", addBookedSeat);
 flightRouter.put("/reschedule", updateFlight);
